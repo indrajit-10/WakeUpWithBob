@@ -1,0 +1,9 @@
+# This folder lives OUTSIDE the public web root and must never be served over HTTP.
+# These rules are a safety net in case the server is (mis)configured to expose it.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+</IfModule>

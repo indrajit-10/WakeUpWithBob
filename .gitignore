@@ -1,0 +1,16 @@
+# The live database is per-machine data — never commit it.
+/data/*.db
+/data/*.db-shm
+/data/*.db-wal
+/data/*.db-journal
+
+# Real secrets live here (copy of config.example.php). Never commit.
+/app/config.php
+
+# Admin-uploaded images.
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# OS / editor noise
+.DS_Store
+Thumbs.db

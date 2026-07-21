@@ -1,0 +1,18 @@
+# Keep the image clean and predictable.
+.git
+.gitignore
+*.md
+
+# Per-machine SQLite database — the app rebuilds it on first run.
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/*.db-journal
+
+# Local secrets: the image builds config.php from config.example.php instead,
+# so a developer's local config never gets baked into the deployed image.
+app/config.php
+
+# OS / editor noise
+**/.DS_Store
+Thumbs.db

@@ -81,11 +81,42 @@ deployment with no sample data, set `define('LOAD_SAMPLE_DATA', false);` in
   deny-all `.htaccess` safety nets in `app/`, `data/`, `db/`, `scripts/` in
   case a server is pointed at the project root by mistake.
 
+### Security hardening
+
+On top of the baseline above, a site-wide hardening layer — all centralised so
+it applies to every response, not page by page:
+
+- **HTTP security headers on every response** (`send_security_headers()` in
+  `app/helpers.php`, called from `app/db.php`):
+  - a strict **Content-Security-Policy** with `script-src 'self'` — the app ships
+    **no inline JavaScript**, so injected `<script>`/`on*` payloads simply won't
+    run — plus `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, and
+    `frame-ancestors 'self'`;
+  - `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`
+    (clickjacking), and `Referrer-Policy: strict-origin-when-cross-origin`.
+- **No inline handlers.** The handful of UI behaviours live in
+  `public/assets/js/app.js` (event delegation + `data-` attributes) so the CSP
+  can stay strict without breaking the page.
+- **CSS-context-safe image URLs** (`css_url_value()`): an admin image URL placed
+  into an inline `background-image:url('…')` is percent-encoded, so a stray quote
+  or parenthesis can't break out of the CSS string and inject styles — belt to
+  the `htmlspecialchars` braces already on that output.
+- **Same-site redirects only** (`safe_local_redirect()`): the public like /
+  comment / feedback endpoints bounce back to a *validated local path* instead of
+  trusting the client-supplied `Referer`, closing an open-redirect vector.
+- **Atomic like / unlike** (`public/like.php`, `public/comment-like.php`):
+  `INSERT OR IGNORE` + `rowCount()` inside a transaction, so a double-tap can't
+  desync the counter or trip the `UNIQUE` constraint (which would otherwise throw).
+- **No error leakage.** With `DEBUG` off (the production default in
+  `config.example.php`), uncaught errors are logged and the visitor sees a plain
+  message — stack traces and file paths never reach the page.
+
 ### Before you go live
 - **Change the admin password** (default `bob` / `changeme`).
 - Set `CONTACT_EMAIL` (and confirm the `G123_*` footer links) in `app/config.php`.
 - Serve over **HTTPS** (the Secure cookie flag then turns on by itself).
-- Set `display_errors = Off` in `php.ini` so errors never reach visitors.
+- Keep **`DEBUG` off** in `app/config.php` (the default) so errors are logged, not
+  shown; setting `display_errors = Off` in `php.ini` too is good belt-and-braces.
 - Set `define('LOAD_SAMPLE_DATA', false);` in `app/config.php` for a clean start.
 - Point the web server's document root at **`public/`** (never the project root).
 - Consider a CAPTCHA / rate-limit on the public comment & feedback forms if

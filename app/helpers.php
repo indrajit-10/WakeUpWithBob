@@ -18,6 +18,53 @@ function redirect(string $to): void {
     exit;
 }
 
+/** Turn a (client-supplied) Referer into a safe, same-site redirect target.
+ *  Returns the Referer's local path when it points at this site, else the fallback —
+ *  so a forged Referer can never bounce a visitor off to another origin. */
+function safe_local_redirect(?string $referer, string $fallback = '/'): string {
+    if (!is_string($referer) || $referer === '') {
+        return $fallback;
+    }
+    $parts = parse_url($referer);
+    if ($parts === false) {
+        return $fallback;
+    }
+    if (isset($parts['host']) && $parts['host'] !== ($_SERVER['HTTP_HOST'] ?? '')) {
+        return $fallback;   // points at another host — refuse it
+    }
+    $path = $parts['path'] ?? '/';
+    // must be a plain local path — reject protocol-relative ("//") and "/\" tricks
+    if ($path === '' || $path[0] !== '/' || (isset($path[1]) && ($path[1] === '/' || $path[1] === '\\'))) {
+        return $fallback;
+    }
+    return $path
+        . (isset($parts['query'])    ? '?' . $parts['query']    : '')
+        . (isset($parts['fragment']) ? '#' . $parts['fragment'] : '');
+}
+
+/** Send hardening HTTP headers on every web response (no-op on CLI or once output has begun). */
+function send_security_headers(): void {
+    if (PHP_SAPI === 'cli' || headers_sent()) {
+        return;
+    }
+    // This app ships NO inline scripts, so script-src can stay strict ('self') — a
+    // strong brake on injected JavaScript. Inline styles are limited to a static SVG
+    // and the background-image URLs, so style keeps 'unsafe-inline'. External images
+    // are allowed over https (admin post images + the 123 Greetings logo).
+    header("Content-Security-Policy: "
+        . "default-src 'self'; "
+        . "base-uri 'self'; "
+        . "object-src 'none'; "
+        . "frame-ancestors 'self'; "
+        . "form-action 'self'; "
+        . "img-src 'self' https: data:; "
+        . "style-src 'self' 'unsafe-inline'; "
+        . "script-src 'self'");
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+}
+
 /** True when the current request arrived over HTTPS (so cookies can be marked Secure). */
 function is_https(): bool {
     if (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off') {
@@ -148,6 +195,18 @@ function clean_http_url(string $url): string {
         return '';
     }
     return (preg_match('#^https?://#i', $url) && filter_var($url, FILTER_VALIDATE_URL)) ? $url : '';
+}
+
+/** Percent-encode the handful of characters that could break out of a CSS url('…')
+ *  string, so a validated image URL is safe to drop into an inline style attribute.
+ *  (FILTER_VALIDATE_URL still lets quotes/parens through, and the HTML parser decodes
+ *  entities before the CSS parser sees them, so e() alone is not enough here.) */
+function css_url_value(string $url): string {
+    return strtr($url, [
+        "'"  => '%27', '"'  => '%22', '('  => '%28', ')'  => '%29', '\\' => '%5C',
+        ' '  => '%20', "\n" => '%0A', "\r" => '%0D', "\t" => '%09',
+        '<'  => '%3C', '>'  => '%3E',
+    ]);
 }
 
 /** Friendly "3 hr. ago" style timestamp from a stored datetime string. */

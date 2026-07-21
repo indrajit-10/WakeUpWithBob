@@ -15,7 +15,7 @@ $sidebarFlash = flash_get();
       <input class="w-input" type="email" name="email" placeholder="Your email (optional)">
       <button class="btn-orange" type="submit">Send to Bob</button>
     </form>
-    <div class="tiny"><span class="dot"></span>Goes to Bob's desk — never posted publicly.</div>
+    <div class="tiny"><span class="dot"></span>Goes to Bob's desk.</div>
   </div>
 </div>
 

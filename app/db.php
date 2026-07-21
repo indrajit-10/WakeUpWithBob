@@ -9,6 +9,27 @@
  */
 require_once __DIR__ . '/config.php';
 
+// --- fail safe: never leak stack traces or file paths to visitors ------------------
+// Set  define('DEBUG', true);  in config.php while developing to see full errors on screen.
+$__debug = defined('DEBUG') && DEBUG;
+@ini_set('display_errors', $__debug ? '1' : '0');
+error_reporting(E_ALL);
+if (!$__debug && PHP_SAPI !== 'cli') {
+    set_exception_handler(static function (\Throwable $e): void {
+        error_log((string) $e);                          // logged for the operator, never shown
+        http_response_code(500);
+        if (!headers_sent()) {
+            header('Content-Type: text/plain; charset=utf-8');
+        }
+        echo 'Something went wrong on our end. Please try again in a moment.';
+    });
+}
+
+// --- hardening HTTP headers on every response (CSP, nosniff, frame + referrer policy) ---
+if (function_exists('send_security_headers')) {
+    send_security_headers();
+}
+
 @mkdir(dirname(DB_PATH), 0775, true);                     // make sure the data/ folder exists
 $db_is_fresh = !file_exists(DB_PATH) || filesize(DB_PATH) === 0;
 

@@ -84,7 +84,11 @@ function render_comment_card(array $comment, array $repliesByParent, array $like
       <div class="cmt-body"><?= e($comment['body']) ?></div>
 
       <?php if ($isPreview): ?>
-        <div class="cmt-pending-note"><span class="dot"></span>Waiting for Bob to read it — it'll appear here once he approves.</div>
+        <div class="cmt-pending-note" role="status">
+          <span class="dot"></span>
+          <span class="cmt-pending-text">Waiting for Bob to read it — it'll appear here once he approves.</span>
+          <button type="button" class="cmt-pending-close" data-dismiss-closest=".cmt-pending-note" aria-label="Dismiss this notice">&times;</button>
+        </div>
       <?php else: ?>
         <div class="cmt-actions">
           <form method="post" action="/comment-like.php" class="cmt-form-inline">
@@ -92,7 +96,7 @@ function render_comment_card(array $comment, array $repliesByParent, array $like
             <input type="hidden" name="comment_id" value="<?= $cid ?>">
             <button class="cmt-btn<?= $liked ? ' liked' : '' ?>" type="submit"><svg class="ico"><use href="#i-heart"/></svg> <?= (int) $comment['like_count'] ?></button>
           </form>
-          <button class="cmt-btn" type="button" onclick="document.getElementById('reply-form-<?= $cid ?>').classList.toggle('visible');"><svg class="ico"><use href="#i-comment"/></svg> Reply</button>
+          <button class="cmt-btn" type="button" data-toggle="reply-form-<?= $cid ?>" data-toggle-class="visible"><svg class="ico"><use href="#i-comment"/></svg> Reply</button>
         </div>
 
         <form id="reply-form-<?= $cid ?>" class="reply-form" method="post" action="/comment.php">
@@ -149,7 +153,7 @@ require __DIR__ . '/../app/views/header.php';
         <p class="post-text"><?= e($question['body']) ?></p>
 
         <?php if (!empty($question['image_url'])): ?>
-          <div class="post-img" style="background-image:url('<?= e($question['image_url']) ?>')"></div>
+          <div class="post-img" style="background-image:url('<?= e(css_url_value($question['image_url'])) ?>')"></div>
         <?php endif; ?>
 
         <div class="actions">
@@ -167,7 +171,6 @@ require __DIR__ . '/../app/views/header.php';
       <section class="thread">
         <div class="thread-head">
           <h2><?= $commentTotal ?> Comment<?= $commentTotal === 1 ? '' : 's' ?></h2>
-          <span class="approval-note">Read by Bob before they appear</span>
         </div>
 
         <?php if ($topComments): ?>

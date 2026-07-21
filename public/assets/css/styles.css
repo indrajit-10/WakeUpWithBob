@@ -286,9 +286,14 @@ a{color:inherit; text-decoration:none}
 .cmt--bob{background:var(--green-tint); border-color:transparent; border-left:3px solid var(--green)}
 .cmt-replies{margin:12px 0 0 16px; padding-left:14px; border-left:2px solid var(--border); display:flex; flex-direction:column; gap:10px}
 .cmt-replies .cmt{margin-bottom:0}
-.cmt--pending{opacity:.6; border-style:dashed}
-.cmt-pending-note{display:inline-flex; align-items:center; gap:8px; margin-top:8px; font-size:12px; color:var(--meta); font-weight:600}
-.cmt-pending-note .dot{width:7px; height:7px; border-radius:50%; background:var(--orange); flex:none}
+.cmt--pending{border-style:dashed}
+/* fade only the comment body/head so the pop-up notice below stays fully opaque */
+.cmt--pending .cmt-head, .cmt--pending .cmt-body{opacity:.6}
+.cmt-pending-note{position:relative; display:flex; align-items:flex-start; gap:8px; margin-top:10px; padding:11px 34px 11px 13px; font-size:12.5px; color:var(--text); font-weight:600; background:var(--orange-tint); border:1px solid var(--orange); border-radius:12px; box-shadow:0 8px 24px rgba(20,33,46,.16)}
+.cmt-pending-note .dot{width:7px; height:7px; margin-top:5px; border-radius:50%; background:var(--orange); flex:none}
+.cmt-pending-text{line-height:1.5}
+.cmt-pending-close{position:absolute; top:6px; right:7px; width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; padding:0; font-size:18px; line-height:1; color:var(--meta); background:transparent; border:none; border-radius:6px; cursor:pointer}
+.cmt-pending-close:hover{color:var(--text); background:rgba(0,0,0,.06)}
 
 .reply-form{display:none; margin-top:12px; flex-direction:column; gap:8px}
 .reply-form.visible{display:flex}

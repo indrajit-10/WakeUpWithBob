@@ -10,6 +10,10 @@ define('DB_PATH', dirname(__DIR__) . '/data/mornings.db');
 define('SITE_NAME', 'Wake up with Bob');
 define('SITE_URL',  'http://localhost:8000');
 
+// Development switch. Leave FALSE in production: errors are then logged, never shown,
+// so stack traces and file paths can't leak to visitors. Set TRUE locally to see them.
+define('DEBUG', false);
+
 // Where to reach a human (shown on the Contact page).
 define('CONTACT_EMAIL', 'hello@example.com');
 

@@ -6,7 +6,7 @@ require_post();
 csrf_check();
 
 $commentId = isset($_POST['comment_id']) ? (int) $_POST['comment_id'] : 0;
-$back = $_SERVER['HTTP_REFERER'] ?? '/';
+$back = safe_local_redirect($_SERVER['HTTP_REFERER'] ?? null);
 if ($commentId <= 0) {
     redirect($back);
 }
@@ -20,17 +20,25 @@ if (!$exists->fetchColumn()) {
 
 $voterToken = get_voter_token();
 
-// toggle: like if not liked yet, otherwise unlike
-$stmt = $pdo->prepare('SELECT id FROM likes WHERE target_type = ? AND target_id = ? AND voter_token = ?');
-$stmt->execute(['comment', $commentId, $voterToken]);
-$existing = $stmt->fetchColumn();
-
-if ($existing) {
-    $pdo->prepare('DELETE FROM likes WHERE id = ?')->execute([$existing]);
-    $pdo->prepare('UPDATE comments SET like_count = MAX(like_count - 1, 0) WHERE id = ?')->execute([$commentId]);
-} else {
-    $pdo->prepare('INSERT INTO likes (target_type, target_id, voter_token) VALUES (?, ?, ?)')->execute(['comment', $commentId, $voterToken]);
-    $pdo->prepare('UPDATE comments SET like_count = like_count + 1 WHERE id = ?')->execute([$commentId]);
+// Toggle atomically — same approach as like.php: INSERT OR IGNORE + rowCount() means no
+// read-then-write race, the UNIQUE constraint can't throw on a double-tap, and the like
+// row and the denormalised counter stay in lockstep inside one transaction.
+try {
+    $pdo->beginTransaction();
+    $ins = $pdo->prepare('INSERT OR IGNORE INTO likes (target_type, target_id, voter_token) VALUES (?, ?, ?)');
+    $ins->execute(['comment', $commentId, $voterToken]);
+    if ($ins->rowCount() === 1) {
+        $pdo->prepare('UPDATE comments SET like_count = like_count + 1 WHERE id = ?')->execute([$commentId]);
+    } else {
+        $pdo->prepare('DELETE FROM likes WHERE target_type = ? AND target_id = ? AND voter_token = ?')
+            ->execute(['comment', $commentId, $voterToken]);
+        $pdo->prepare('UPDATE comments SET like_count = MAX(like_count - 1, 0) WHERE id = ?')->execute([$commentId]);
+    }
+    $pdo->commit();
+} catch (\PDOException $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
 }
 
 // return to the comment on the question page if we can resolve it

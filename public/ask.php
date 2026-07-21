@@ -8,7 +8,7 @@ csrf_check();
 
 $body  = clip($_POST['body'] ?? '', 2000);
 $email = clip($_POST['email'] ?? '', 120);
-$back  = $_SERVER['HTTP_REFERER'] ?? '/';
+$back  = safe_local_redirect($_SERVER['HTTP_REFERER'] ?? null);
 
 if ($body !== '') {
     $stmt = $pdo->prepare('INSERT INTO reader_questions (body, email) VALUES (?, ?)');

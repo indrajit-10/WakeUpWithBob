@@ -10,6 +10,7 @@ $pageTitle = $pageTitle ?? SITE_NAME;
   <title><?= e($pageTitle) ?></title>
   <link rel="icon" href="/assets/img/logo.svg">
   <link rel="stylesheet" href="/assets/css/styles.css">
+  <script src="/assets/js/app.js" defer></script>
 </head>
 <body>
 

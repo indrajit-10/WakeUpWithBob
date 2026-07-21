@@ -11,7 +11,7 @@ $authorName = clip($_POST['author_name'] ?? '', 80);
 $body = clip($_POST['comment_body'] ?? '', 5000);
 
 if ($questionId <= 0 || $body === '') {
-    redirect($_SERVER['HTTP_REFERER'] ?? '/');
+    redirect(safe_local_redirect($_SERVER['HTTP_REFERER'] ?? null));
 }
 
 // the question must actually exist (otherwise the FK would 500 on insert)

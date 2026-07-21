@@ -185,7 +185,7 @@ require __DIR__ . '/../../app/views/header.php';
                   </div>
                   <div class="post-hist-actions">
                     <a class="pill" href="/admin/?edit=<?= (int) $q['id'] ?>#compose">Edit</a>
-                    <form method="post" action="/admin/" onsubmit="return confirm('Delete post #<?= (int) $q['post_number'] ?>?');">
+                    <form method="post" action="/admin/" data-confirm="Delete post #<?= (int) $q['post_number'] ?>?">
                       <?= csrf_field() ?>
                       <input type="hidden" name="delete_question_id" value="<?= (int) $q['id'] ?>">
                       <button class="admin-delete" type="submit">Delete</button>

@@ -17,7 +17,7 @@ $qid = (int) $q['id'];
   <p class="post-text"><?= e($q['body']) ?></p>
 
   <?php if (!empty($q['image_url'])): ?>
-    <div class="post-img" style="background-image:url('<?= e($q['image_url']) ?>')"></div>
+    <div class="post-img" style="background-image:url('<?= e(css_url_value($q['image_url'])) ?>')"></div>
   <?php endif; ?>
 
   <div class="actions">
@@ -28,7 +28,7 @@ $qid = (int) $q['id'];
         <svg class="ico ico-sm"><use href="#i-heart"/></svg><span class="num"><?= (int) $q['like_count'] ?></span>
       </button>
     </form>
-    <button class="pill" type="button" onclick="document.getElementById('comment-form-<?= $qid ?>').scrollIntoView({behavior:'smooth', block:'center'});">
+    <button class="pill" type="button" data-scrollto="comment-form-<?= $qid ?>">
       <svg class="ico ico-sm"><use href="#i-comment"/></svg><?= (int) $q['comment_count'] ?>
     </button>
     <button class="pill" type="button"><svg class="ico ico-sm"><use href="#i-share"/></svg>Share</button>

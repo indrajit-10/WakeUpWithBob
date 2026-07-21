@@ -243,7 +243,7 @@ $filterChip = static function (string $key, string $label, int $count, string $c
                   <?php endif; ?>
                   <div class="mod-actions">
                     <button class="mod-btn mod-btn--reply" type="button"
-                            onclick="document.getElementById('modreply-<?= $cid ?>').classList.toggle('open');">
+                            data-toggle="modreply-<?= $cid ?>" data-toggle-class="open">
                       <?= $replied ? 'Reply again' : 'Reply as Bob' ?>
                     </button>
                   </div>

@@ -49,12 +49,36 @@ database rebuilds itself from `db/schema.sql` + `db/seed.sql` on every deploy �
 fine for a demo; attach a persistent disk (mounted at `/var/www/html/data`) for
 durable data.
 
+## What shows on the home feed (and starting clean)
+
+The home page (`/`) lists only mornings from the **last 7 days** — older ones
+move to the archive. If a whole week goes by with **no new post**, home does not
+go blank: it falls back to the single most-recent morning so visitors always land
+on something. So a lone, weeks-old post on an otherwise-quiet home page is that
+fallback — **not a bug**.
+
+**Starting a real site clean.** On the very first run the database seeds a few
+**sample posts** (dated in the past) so nothing is empty while you explore. For a
+live site you almost certainly want to start empty — set
+`define('LOAD_SAMPLE_DATA', false);` in `app/config.php` **before** the database
+is first built. If you leave sample data on, every sample post is already more
+than 7 days old, so the home feed will keep showing one of them (via the fallback
+above) until you publish real questions.
+
+> **Ephemeral hosts (e.g. Render's free tier):** the database rebuilds from
+> `schema.sql` + `seed.sql` on every deploy, so sample data reappears and any real
+> content you added is reset each time. For a durable live site, run with
+> `LOAD_SAMPLE_DATA` off **and** attach a persistent disk at `/var/www/html/data`
+> (or use a paid instance) so posts survive deploys.
+
 ## What's included
 
 **Public**
-- **Feed (`/`)** — the **last 7 days** of mornings (older ones live in the
-  archive). Two views: **Latest** (newest first) and **Most Engaging** (most
-  commented). Each post shows its **date** and its top comment.
+- **Feed (`/`)** — the **last 7 days** of mornings (older ones move to the
+  archive; if a whole week is empty it falls back to the latest post — see
+  *"What shows on the home feed"* above). Two views: **Latest** (newest first)
+  and **Most Engaging** (most commented). Each post shows its **date** and its
+  top comment.
 - **Search** (top bar) — searches the **title and body** of every morning,
   all-time, and is also **date-aware**. See [Search](#search) below.
 - **Question page (`/question.php?id=…`)** — the full question with a share bar,
@@ -151,7 +175,9 @@ also appears in ordinary web-server access logs.)*
 - Serve over **HTTPS** (the Secure cookie flag then turns on by itself).
 - Keep **`DEBUG` off** in `app/config.php` (the default) so errors are logged,
   not shown; setting `display_errors = Off` in `php.ini` too is belt-and-braces.
-- Set `define('LOAD_SAMPLE_DATA', false);` in `app/config.php` for a clean start.
+- Set `define('LOAD_SAMPLE_DATA', false);` in `app/config.php` **before the first
+  run** for a clean start — otherwise the old sample posts keep showing on the home
+  feed via the 7-day fallback (see *"What shows on the home feed"*).
 - Point the web server's document root at **`public/`** (never the project root).
 - Consider a CAPTCHA / rate-limit on the public comment & feedback forms (and,
   if wanted, on search) if spam or noise becomes an issue.

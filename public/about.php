@@ -12,25 +12,19 @@ ensure_session(); // start the session before any output so csrf_field() (right 
 // --- the live numbers, straight from the DB (guard every null → 0) ---
 $mornings = (int) $pdo->query('SELECT COUNT(*) FROM questions')->fetchColumn();
 $replies  = (int) $pdo->query('SELECT COUNT(*) FROM comments WHERE approved = 1 AND is_admin_reply = 0')->fetchColumn();
-$qLikes   = (int) $pdo->query('SELECT COALESCE(SUM(like_count), 0) FROM questions')->fetchColumn();
-$cLikes   = (int) $pdo->query('SELECT COALESCE(SUM(like_count), 0) FROM comments')->fetchColumn();
-$likes    = $qLikes + $cLikes;
 
 $firstRaw = $pdo->query('SELECT MIN(created_at) FROM questions')->fetchColumn();
 $since    = $firstRaw ? date('M j, Y', strtotime($firstRaw)) : null;   // e.g. "Jul 7, 2026"
 
 $pageTitle = 'About Bob · ' . SITE_NAME;
+$navActive = 'about';
 require __DIR__ . '/../app/views/header.php';
 ?>
 <div class="app">
   <div class="shell">
 
     <nav class="left">
-      <a class="nav" href="/"><svg class="ico"><use href="#i-home"/></svg>Home</a>
-      <a class="nav" href="/archive.php"><svg class="ico"><use href="#i-clock"/></svg>Archive</a>
-      <div class="rail-sep"></div>
-      <div class="rail-label">Community</div>
-      <a class="nav active" href="/about.php"><svg class="ico"><use href="#i-info"/></svg>About Bob</a>
+      <?php include __DIR__ . '/../app/views/leftnav.php'; ?>
     </nav>
 
     <main class="center">
@@ -66,8 +60,8 @@ require __DIR__ . '/../app/views/header.php';
           <li class="hiw-step">
             <span class="hiw-num">2</span>
             <div class="hiw-body">
-              <div class="hiw-h"><svg class="ico ico-sm"><use href="#i-comment"/></svg>You like it, reply, and share.</div>
-              <p>Say what you think, react to a reply that stuck with you, or pass the morning's question along to someone who would smile at it.</p>
+              <div class="hiw-h"><svg class="ico ico-sm"><use href="#i-comment"/></svg>You reply and share.</div>
+              <p>Say what you think, reply to a comment that stuck with you, or pass the morning's question along to someone who would smile at it.</p>
             </div>
           </li>
           <li class="hiw-step">
@@ -107,7 +101,6 @@ require __DIR__ . '/../app/views/header.php';
         <p class="post-text">Today's question is waiting on the feed — read it, and tell the room what you think.</p>
         <div class="about-cta-row">
           <a class="btn-orange about-cta-btn" href="/">Read this morning's question</a>
-          <span class="tiny"><span class="dot"></span>Powered by <?= g123_logo() ?></span>
         </div>
         <p class="muted about-cta-note">Got one for Bob to ask? Use <b>Ask Bob a question</b> over in the sidebar — he reads every one.</p>
       </article>
@@ -121,10 +114,6 @@ require __DIR__ . '/../app/views/header.php';
         <div class="stat">
           <span class="stat-num"><?= e(number_format($replies)) ?></span>
           <span class="stat-label"><?= $replies === 1 ? 'reply' : 'replies' ?> shared</span>
-        </div>
-        <div class="stat">
-          <span class="stat-num"><?= e(number_format($likes)) ?></span>
-          <span class="stat-label"><?= $likes === 1 ? 'like' : 'likes' ?> given</span>
         </div>
         <?php if ($since !== null): ?>
           <div class="stat stat--since">

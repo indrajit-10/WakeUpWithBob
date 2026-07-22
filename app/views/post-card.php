@@ -10,7 +10,7 @@ $qid = (int) $q['id'];
     <span class="avatar"><img class="logo" src="/assets/img/logo.svg" alt="" width="19" height="19"></span>
     <a class="community" href="/question.php?id=<?= $qid ?>">Wake up with Bob</a>
     <span>·</span>
-    <span class="time"><?= e(time_ago($q['created_at'])) ?></span>
+    <span class="time"><?= e(date('F j, Y', strtotime($q['created_at']))) ?></span>
   </div>
 
   <h2 class="post-title"><a href="/question.php?id=<?= $qid ?>"><?= e($q['title']) ?></a></h2>
@@ -21,13 +21,6 @@ $qid = (int) $q['id'];
   <?php endif; ?>
 
   <div class="actions">
-    <form method="post" action="/like.php">
-      <?= csrf_field() ?>
-      <input type="hidden" name="question_id" value="<?= $qid ?>">
-      <button class="pill like<?= in_array($qid, $likedQuestions ?? [], true) ? ' liked' : '' ?>" type="submit">
-        <svg class="ico ico-sm"><use href="#i-heart"/></svg><span class="num"><?= (int) $q['like_count'] ?></span>
-      </button>
-    </form>
     <button class="pill" type="button" data-scrollto="comment-form-<?= $qid ?>">
       <svg class="ico ico-sm"><use href="#i-comment"/></svg><?= (int) $q['comment_count'] ?>
     </button>
@@ -40,7 +33,6 @@ $qid = (int) $q['id'];
         <div class="tc-meta"><b><?= e($top['author_name'] ?: 'a reader') ?></b> · <?= e(time_ago($top['created_at'])) ?></div>
         <div class="tc-text"><?= e($top['body']) ?></div>
         <div class="tc-actions">
-          <span><svg class="ico"><use href="#i-heart"/></svg> <?= (int) $top['like_count'] ?></span>
           <span><svg class="ico"><use href="#i-comment"/></svg> <?= (int) $top['reply_count'] ?> replies</span>
         </div>
       </div>

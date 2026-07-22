@@ -102,8 +102,21 @@ function approve_all_for_question(int $questionId): int {
 function reject_comment(int $commentId): void {
     global $pdo;
 
-    $stmt = $pdo->prepare('DELETE FROM comments WHERE id = ?');
+    // Note the post first: rejecting a comment can also cascade-delete approved child
+    // replies, so we resync comment_count from the truth afterward (never leave it inflated).
+    $stmt = $pdo->prepare('SELECT question_id FROM comments WHERE id = ? LIMIT 1');
     $stmt->execute([$commentId]);
+    $questionId = $stmt->fetchColumn();
+
+    $pdo->prepare('DELETE FROM comments WHERE id = ?')->execute([$commentId]);
+
+    if ($questionId !== false) {
+        $pdo->prepare(
+            'UPDATE questions SET comment_count =
+               (SELECT COUNT(*) FROM comments WHERE question_id = ? AND approved = 1)
+             WHERE id = ?'
+        )->execute([$questionId, $questionId]);
+    }
 }
 
 function reply_to_comment(int $commentId, string $replyBody): void {

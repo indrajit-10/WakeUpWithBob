@@ -16,13 +16,7 @@ require __DIR__ . '/../app/views/header.php';
   <div class="shell">
 
     <nav class="left">
-      <a class="nav" href="/"><svg class="ico"><use href="#i-home"/></svg>Home</a>
-      <a class="nav" href="/archive.php"><svg class="ico"><use href="#i-clock"/></svg>Archive</a>
-      <div class="rail-sep"></div>
-      <div class="rail-label">Community</div>
-      <a class="nav" href="/about.php"><svg class="ico"><use href="#i-info"/></svg>About Bob</a>
-      <a class="nav" href="/faq.php"><svg class="ico"><use href="#i-comment"/></svg>FAQ</a>
-      <a class="nav" href="/contact.php"><svg class="ico"><use href="#i-mail"/></svg>Contact</a>
+      <?php include __DIR__ . '/../app/views/leftnav.php'; ?>
     </nav>
 
     <main class="center">
@@ -36,7 +30,7 @@ require __DIR__ . '/../app/views/header.php';
 
         <h2>What this is</h2>
         <p class="post-text">Wake up with Bob is a free community where Bob posts one question each morning and
-          readers reply, like, and share. There are no accounts and nothing to buy.</p>
+          readers reply and share. There are no accounts and nothing to buy.</p>
 
         <h2>Your posts</h2>
         <p class="post-text">You keep ownership of what you write. By posting, you give us permission to show it on

@@ -81,7 +81,7 @@ if (admin_logged_in()) {
     $page = min($page, $totalPages);
     $offset = ($page - 1) * $perPage;
     $stmt = $pdo->prepare(
-        'SELECT id, post_number, title, created_at, like_count, comment_count
+        'SELECT id, post_number, title, created_at, comment_count
          FROM questions ORDER BY COALESCE(post_number, id) DESC, id DESC LIMIT ? OFFSET ?'
     );
     $stmt->bindValue(1, $perPage, PDO::PARAM_INT);
@@ -181,7 +181,7 @@ require __DIR__ . '/../../app/views/header.php';
                   <span class="post-num">#<?= (int) $q['post_number'] ?></span>
                   <div class="post-hist-main">
                     <a class="post-hist-title" href="/question.php?id=<?= (int) $q['id'] ?>"><?= e($q['title']) ?></a>
-                    <div class="post-hist-meta"><?= e($q['created_at']) ?> · <?= (int) $q['like_count'] ?> likes · <?= (int) $q['comment_count'] ?> comments</div>
+                    <div class="post-hist-meta"><?= e($q['created_at']) ?> · <?= (int) $q['comment_count'] ?> comments</div>
                   </div>
                   <div class="post-hist-actions">
                     <a class="pill" href="/admin/?edit=<?= (int) $q['id'] ?>#compose">Edit</a>

@@ -23,10 +23,6 @@ $faqs = [
         'a' => 'Every comment and every reply is read by Bob before it appears in public. Right after you post, you will see a faded copy of your own comment marked “waiting for Bob to read it” — that copy is only visible to you, and it turns into a normal comment once Bob approves it. This keeps the threads kind and on-topic.',
     ],
     [
-        'q' => 'How do likes work?',
-        'a' => 'Tap the heart to like a question or a comment; tap it again to remove your like — just like on Instagram. Each browser gets one like per item, tracked by a small cookie (no account needed).',
-    ],
-    [
         'q' => 'Can I reply to a reply?',
         'a' => 'Yes. Threads are fully nested — you can reply to the question, to any comment, or to a reply of a reply, as deep as the conversation goes. Every reply is held for Bob’s approval, the same as top-level comments.',
     ],
@@ -48,7 +44,7 @@ $faqs = [
     ],
     [
         'q' => 'How is my information used?',
-        'a' => 'Only to run the site — showing your comment once approved, remembering your like, and letting Bob reply to a question or note you sent in. We do not sell it or use third-party ad trackers. The full details are on the Privacy page.',
+        'a' => 'Only to run the site — showing your comment once approved, remembering the name you last used on this device, and letting Bob reply to a question or note you sent in. We do not sell it or use third-party ad trackers. The full details are on the Privacy page.',
     ],
 ];
 
@@ -59,13 +55,7 @@ require __DIR__ . '/../app/views/header.php';
   <div class="shell">
 
     <nav class="left">
-      <a class="nav" href="/"><svg class="ico"><use href="#i-home"/></svg>Home</a>
-      <a class="nav" href="/archive.php"><svg class="ico"><use href="#i-clock"/></svg>Archive</a>
-      <div class="rail-sep"></div>
-      <div class="rail-label">Community</div>
-      <a class="nav" href="/about.php"><svg class="ico"><use href="#i-info"/></svg>About Bob</a>
-      <a class="nav" href="/faq.php"><svg class="ico"><use href="#i-comment"/></svg>FAQ</a>
-      <a class="nav" href="/contact.php"><svg class="ico"><use href="#i-mail"/></svg>Contact</a>
+      <?php include __DIR__ . '/../app/views/leftnav.php'; ?>
     </nav>
 
     <main class="center">

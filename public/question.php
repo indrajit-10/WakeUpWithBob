@@ -3,7 +3,6 @@ require __DIR__ . '/../app/helpers.php';
 require __DIR__ . '/../app/db.php';
 
 ensure_session(); // start the session before any output so csrf_field() can set its cookie
-$voterToken = get_voter_token();
 
 $questionId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 if ($questionId <= 0) {
@@ -18,15 +17,6 @@ if (!$question) {
     http_response_code(404);
     exit('Question not found.');
 }
-
-// has THIS browser liked the question / which comments?
-$ql = $pdo->prepare('SELECT 1 FROM likes WHERE target_type = ? AND target_id = ? AND voter_token = ? LIMIT 1');
-$ql->execute(['question', $questionId, $voterToken]);
-$questionLiked = (bool) $ql->fetchColumn();
-
-$cl = $pdo->prepare('SELECT target_id FROM likes WHERE target_type = ? AND voter_token = ?');
-$cl->execute(['comment', $voterToken]);
-$likedComments = array_map('intval', $cl->fetchAll(PDO::FETCH_COLUMN));
 
 // approved comments, grouped into a parent → children tree
 $comments = $pdo->prepare('SELECT * FROM comments WHERE question_id = ? AND approved = 1 ORDER BY created_at ASC');
@@ -69,10 +59,9 @@ if ($justPosted) {
 }
 
 /** Recursively render a comment and all of its nested replies. Any comment can be replied to. */
-function render_comment_card(array $comment, array $repliesByParent, array $likedComments, int $depth = 0): void {
+function render_comment_card(array $comment, array $repliesByParent, int $depth = 0): void {
     $isBob     = (int) $comment['is_admin_reply'] === 1;
     $cid       = (int) $comment['id'];
-    $liked     = in_array($cid, $likedComments, true);
     $isPreview = !empty($comment['_preview']);   // the visitor's own just-submitted, still-pending comment
     ?>
     <div class="cmt<?= $isBob ? ' cmt--bob' : '' ?><?= $isPreview ? ' cmt--pending' : '' ?>" id="comment-<?= $cid ?>">
@@ -91,11 +80,6 @@ function render_comment_card(array $comment, array $repliesByParent, array $like
         </div>
       <?php else: ?>
         <div class="cmt-actions">
-          <form method="post" action="/comment-like.php" class="cmt-form-inline">
-            <?= csrf_field() ?>
-            <input type="hidden" name="comment_id" value="<?= $cid ?>">
-            <button class="cmt-btn<?= $liked ? ' liked' : '' ?>" type="submit"><svg class="ico"><use href="#i-heart"/></svg> <?= (int) $comment['like_count'] ?></button>
-          </form>
           <button class="cmt-btn" type="button" data-toggle="reply-form-<?= $cid ?>" data-toggle-class="visible"><svg class="ico"><use href="#i-comment"/></svg> Reply</button>
         </div>
 
@@ -111,7 +95,7 @@ function render_comment_card(array $comment, array $repliesByParent, array $like
         <?php if (!empty($repliesByParent[$cid])): ?>
           <div class="cmt-replies">
             <?php foreach ($repliesByParent[$cid] as $reply): ?>
-              <?php render_comment_card($reply, $repliesByParent, $likedComments, $depth + 1); ?>
+              <?php render_comment_card($reply, $repliesByParent, $depth + 1); ?>
             <?php endforeach; ?>
           </div>
         <?php endif; ?>
@@ -127,11 +111,7 @@ require __DIR__ . '/../app/views/header.php';
   <div class="shell">
 
     <nav class="left">
-      <a class="nav" href="/"><svg class="ico"><use href="#i-home"/></svg>Home</a>
-      <a class="nav" href="/archive.php"><svg class="ico"><use href="#i-clock"/></svg>Archive</a>
-      <div class="rail-sep"></div>
-      <div class="rail-label">Community</div>
-      <a class="nav" href="/about.php"><svg class="ico"><use href="#i-info"/></svg>About Bob</a>
+      <?php include __DIR__ . '/../app/views/leftnav.php'; ?>
     </nav>
 
     <main class="center">
@@ -146,7 +126,7 @@ require __DIR__ . '/../app/views/header.php';
           <span class="avatar"><img class="logo" src="/assets/img/logo.svg" alt="" width="19" height="19"></span>
           <a class="community" href="/question.php?id=<?= $questionId ?>">Wake up with Bob</a>
           <span>· Posted by</span> <b class="byline">Bob</b>
-          <span>·</span> <span class="time"><?= e(time_ago($question['created_at'])) ?></span>
+          <span>·</span> <span class="time"><?= e(date('F j, Y', strtotime($question['created_at']))) ?></span>
         </div>
 
         <h1 class="post-title lead-title"><?= e($question['title']) ?></h1>
@@ -157,11 +137,6 @@ require __DIR__ . '/../app/views/header.php';
         <?php endif; ?>
 
         <div class="actions">
-          <form method="post" action="/like.php" class="cmt-form-inline">
-            <?= csrf_field() ?>
-            <input type="hidden" name="question_id" value="<?= $questionId ?>">
-            <button class="pill like<?= $questionLiked ? ' liked' : '' ?>" type="submit"><svg class="ico ico-sm"><use href="#i-heart"/></svg><span class="num"><?= (int) $question['like_count'] ?></span></button>
-          </form>
           <a class="pill" href="#add-comment"><svg class="ico ico-sm"><use href="#i-comment"/></svg><?= $commentTotal ?> Comments</a>
           <button class="pill" type="button"><svg class="ico ico-sm"><use href="#i-share"/></svg>Share</button>
         </div>
@@ -175,7 +150,7 @@ require __DIR__ . '/../app/views/header.php';
 
         <?php if ($topComments): ?>
           <?php foreach ($topComments as $comment): ?>
-            <?php render_comment_card($comment, $repliesByParent, $likedComments); ?>
+            <?php render_comment_card($comment, $repliesByParent); ?>
           <?php endforeach; ?>
         <?php else: ?>
           <div class="qempty">No replies yet — be the first to share your morning.</div>

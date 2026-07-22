@@ -1,7 +1,7 @@
 <?php
 /**
  * Admin · Stats  (  /admin/stats.php  )
- * At-a-glance totals plus a per-post breakdown of likes and comments.
+ * At-a-glance totals plus a per-post breakdown of comments.
  */
 require __DIR__ . '/../../app/admin.php';
 
@@ -10,24 +10,19 @@ if (!admin_logged_in()) {
 }
 
 // --- overall totals ---
-$totPosts     = (int) $pdo->query('SELECT COUNT(*) FROM questions')->fetchColumn();
-$totPostLikes = (int) $pdo->query('SELECT COALESCE(SUM(like_count), 0) FROM questions')->fetchColumn();
-$totApproved  = (int) $pdo->query('SELECT COUNT(*) FROM comments WHERE approved = 1')->fetchColumn();
-$totPending   = (int) $pdo->query('SELECT COUNT(*) FROM comments WHERE approved = 0')->fetchColumn();
-$totCmtLikes  = (int) $pdo->query('SELECT COALESCE(SUM(like_count), 0) FROM comments')->fetchColumn();
-$totLikes     = $totPostLikes + $totCmtLikes;
+$totPosts    = (int) $pdo->query('SELECT COUNT(*) FROM questions')->fetchColumn();
+$totApproved = (int) $pdo->query('SELECT COUNT(*) FROM comments WHERE approved = 1')->fetchColumn();
+$totPending  = (int) $pdo->query('SELECT COUNT(*) FROM comments WHERE approved = 0')->fetchColumn();
 
-$avgLikes = $totPosts ? round($totPostLikes / $totPosts, 1) : 0;
-$avgCmts  = $totPosts ? round($totApproved / $totPosts, 1) : 0;
+$avgCmts = $totPosts ? round($totApproved / $totPosts, 1) : 0;
 
 // --- per-post breakdown, with a whitelisted sort ---
 $sort = $_GET['sort'] ?? 'recent';
 $orderBy = match ($sort) {
-    'likes'    => 'q.like_count DESC, q.comment_count DESC',
-    'comments' => 'q.comment_count DESC, q.like_count DESC',
+    'comments' => 'q.comment_count DESC',
     default    => 'COALESCE(q.post_number, q.id) DESC',   // recent
 };
-$sort = in_array($sort, ['likes', 'comments', 'recent'], true) ? $sort : 'recent';
+$sort = in_array($sort, ['comments', 'recent'], true) ? $sort : 'recent';
 
 // pending comments per post, resolved in one grouped query
 $pendingByPost = [];
@@ -36,7 +31,7 @@ foreach ($pdo->query('SELECT question_id, COUNT(*) AS n FROM comments WHERE appr
 }
 
 $rows = $pdo->query(
-    "SELECT q.id, q.post_number, q.title, q.created_at, q.like_count, q.comment_count
+    "SELECT q.id, q.post_number, q.title, q.created_at, q.comment_count
      FROM questions q ORDER BY $orderBy"
 )->fetchAll();
 
@@ -56,17 +51,15 @@ require __DIR__ . '/../../app/views/header.php';
       <div class="admin-header">
         <div>
           <h1>Stats</h1>
-          <p class="muted">How every morning is landing — likes and comments at a glance.</p>
+          <p class="muted">How every morning is landing — comments at a glance.</p>
         </div>
       </div>
 
       <!-- headline totals -->
       <div class="stat-tiles">
         <div class="stat-tile"><span class="stat-tile-num"><?= e(number_format($totPosts)) ?></span><span class="stat-tile-label">Posts</span></div>
-        <div class="stat-tile"><span class="stat-tile-num"><?= e(number_format($totLikes)) ?></span><span class="stat-tile-label">Total likes</span></div>
         <div class="stat-tile"><span class="stat-tile-num"><?= e(number_format($totApproved)) ?></span><span class="stat-tile-label">Comments</span></div>
         <div class="stat-tile"><span class="stat-tile-num"><?= e(number_format($totPending)) ?></span><span class="stat-tile-label">Awaiting approval</span></div>
-        <div class="stat-tile"><span class="stat-tile-num"><?= e($avgLikes) ?></span><span class="stat-tile-label">Avg likes / post</span></div>
         <div class="stat-tile"><span class="stat-tile-num"><?= e($avgCmts) ?></span><span class="stat-tile-label">Avg comments / post</span></div>
       </div>
 
@@ -76,7 +69,6 @@ require __DIR__ . '/../../app/views/header.php';
           <div class="stats-sorts">
             Sort:
             <?= $sortLink('recent', 'Newest', $sort) ?>
-            <?= $sortLink('likes', 'Most liked', $sort) ?>
             <?= $sortLink('comments', 'Most discussed', $sort) ?>
           </div>
         </div>
@@ -85,7 +77,7 @@ require __DIR__ . '/../../app/views/header.php';
           <div class="stats-scroll">
             <table class="stats-table">
               <thead>
-                <tr><th>#</th><th>Post</th><th class="num">Likes</th><th class="num">Comments</th><th class="num">Pending</th></tr>
+                <tr><th>#</th><th>Post</th><th class="num">Comments</th><th class="num">Pending</th></tr>
               </thead>
               <tbody>
                 <?php foreach ($rows as $q):
@@ -97,7 +89,6 @@ require __DIR__ . '/../../app/views/header.php';
                       <a class="stats-title" href="/question.php?id=<?= $qid ?>"><?= e($q['title']) ?></a>
                       <div class="stats-date"><?= e(date('M j, Y', strtotime($q['created_at']))) ?></div>
                     </td>
-                    <td class="num stats-likes"><?= (int) $q['like_count'] ?></td>
                     <td class="num"><?= (int) $q['comment_count'] ?></td>
                     <td class="num"><?= $pending > 0 ? '<span class="stats-pending">' . $pending . '</span>' : '<span class="stats-zero">0</span>' ?></td>
                   </tr>

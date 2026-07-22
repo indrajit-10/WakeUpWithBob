@@ -58,16 +58,19 @@ a{color:inherit; text-decoration:none}
 .searchwrap input{flex:1; border:0; background:transparent; color:var(--text); font:inherit; font-size:.92rem; outline:none}
 .searchwrap input::placeholder{color:var(--meta)}
 
-/* header controls: hamburger (mobile only) + light/dark toggle (all sizes) */
-.tb-left{display:flex; align-items:center; gap:10px}
-.tb-right{display:flex; align-items:center; gap:14px}
-.tb-brand{display:inline-flex; align-items:center}
-.hamburger{display:none; align-items:center; justify-content:center; width:40px; height:40px; padding:0; border:0; border-radius:10px; background:transparent; color:var(--text); cursor:pointer}
+/* header controls: hamburger (mobile only) + light/dark toggle (all sizes).
+   tb-left/tb-right are fixed-size so the search column shrinks, never these. */
+.tb-left{display:flex; align-items:center; gap:10px; flex:none}
+.tb-right{display:flex; align-items:center; gap:10px; flex:none}
+.tb-brand{display:inline-flex; align-items:center; flex:none}
+.hamburger{display:none; align-items:center; justify-content:center; width:40px; height:40px; padding:0; border:0; border-radius:10px; background:transparent; color:var(--text); cursor:pointer; flex:none}
 .hamburger:hover{background:var(--elev)}
 .hamburger .ico{width:22px; height:22px}
-.theme-toggle{display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; padding:0; border:0; border-radius:10px; background:transparent; color:var(--text); cursor:pointer}
-.theme-toggle:hover{background:var(--elev)}
-.theme-toggle .ico{width:20px; height:20px}
+/* light/dark toggle: a clear circular control that swaps a sun / moon glyph */
+.theme-toggle{display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; padding:0; border:1px solid var(--border); border-radius:50%; background:var(--pill); color:var(--meta); cursor:pointer; flex:none; transition:background .15s ease, border-color .15s ease, color .15s ease}
+.theme-toggle:hover{background:var(--pill-h); border-color:var(--blue); color:var(--blue)}
+.theme-toggle:active{transform:scale(.93)}
+.theme-toggle .ico{width:18px; height:18px}
 /* show the glyph for the theme you'd switch TO, based on the EFFECTIVE theme */
 .theme-toggle .ico-sun{display:none}
 .theme-toggle .ico-moon{display:block}
@@ -324,7 +327,10 @@ a{color:inherit; text-decoration:none}
 .shell--question .comment-reply-list{margin-left:12px}
 @media (max-width:760px){
   .shell{grid-template-columns:minmax(0,1fr); padding:16px} .left{display:none}
-  .topbar-inner{display:flex; gap:10px} .tb-lockup{display:none} .tb-center{width:auto; flex:1} .searchwrap{width:100%}
+  .topbar-inner{display:flex; gap:8px; padding:0 12px} .tb-lockup{display:none}
+  /* let the search column shrink so the hamburger + toggle always stay on-screen */
+  .tb-center{width:auto; flex:1 1 auto; min-width:0} .searchwrap{width:100%; min-width:0}
+  .searchwrap input{min-width:0}
   .hamburger{display:inline-flex}
   .mdrawer.open{display:block}
 }

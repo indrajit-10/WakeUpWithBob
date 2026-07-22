@@ -11,6 +11,7 @@ $badge = static fn (int $n): string => $n > 0 ? '<span class="admin-badge">' . $
   <nav class="admin-nav">
     <a class="admin-nav-link<?= $active === 'index.php' ? ' active' : '' ?>" href="/admin/">Posts</a>
     <a class="admin-nav-link<?= $active === 'stats.php' ? ' active' : '' ?>" href="/admin/stats.php">Stats</a>
+    <a class="admin-nav-link<?= $active === 'searches.php' ? ' active' : '' ?>" href="/admin/searches.php">User Search Data</a>
     <a class="admin-nav-link<?= $active === 'comments.php' ? ' active' : '' ?>" href="/admin/comments.php">Moderation <?= $badge($pendingCount) ?></a>
     <a class="admin-nav-link<?= $active === 'questions.php' ? ' active' : '' ?>" href="/admin/questions.php">Reader questions <?= $badge($newQuestions) ?></a>
     <a class="admin-nav-link<?= $active === 'feedback.php' ? ' active' : '' ?>" href="/admin/feedback.php">Feedback <?= $badge($newFeedback) ?></a>

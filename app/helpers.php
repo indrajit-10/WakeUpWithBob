@@ -125,36 +125,25 @@ function csrf_check(): void {
     }
 }
 
-/** Return a cookie-based voter token for likes. */
-function get_voter_token(): string {
-    if (!empty($_COOKIE['voter_token']) && is_string($_COOKIE['voter_token']) && preg_match('/^[a-f0-9]{64}$/', $_COOKIE['voter_token'])) {
-        return $_COOKIE['voter_token'];
-    }
-
-    $token = bin2hex(random_bytes(32));
-    setcookie('voter_token', $token, [
-        'expires' => time() + 31536000,
-        'path' => '/',
-        'secure' => is_https(),
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ]);
-    $_COOKIE['voter_token'] = $token;
-    return $token;
-}
-
 /** Store a one-shot message that survives a single redirect (e.g. "Thanks — sent to Bob"). */
 function flash_set(string $message): void {
     ensure_session();
     $_SESSION['flash'] = $message;
 }
 
-/** Read and clear the one-shot flash message (or null if there isn't one). */
+/** Read and clear the one-shot flash message (or null if there isn't one).
+ *  Cached per-request so it can be rendered in more than one place (e.g. the
+ *  desktop rail AND the mobile drawer) without the first read clearing it. */
 function flash_get(): ?string {
+    static $cached = null;
+    static $read = false;
     ensure_session();
-    $message = $_SESSION['flash'] ?? null;
-    unset($_SESSION['flash']);
-    return $message;
+    if (!$read) {
+        $cached = $_SESSION['flash'] ?? null;
+        unset($_SESSION['flash']);
+        $read = true;
+    }
+    return $cached;
 }
 
 /** Remember the commenter's name for this browser session so we can prefill it next time. */
@@ -207,6 +196,50 @@ function css_url_value(string $url): string {
         ' '  => '%20', "\n" => '%0A', "\r" => '%0D', "\t" => '%09',
         '<'  => '%3C', '>'  => '%3E',
     ]);
+}
+
+/** Detect a date inside a search query, for date-aware search.
+ *  Returns ['ymd' => 'YYYY-MM-DD'] when a full date (with a year) is given,
+ *  ['md' => 'MM-DD'] for a day+month with no year (match that day in ANY year),
+ *  or null when the query is not a recognisable date.
+ *  Understands: '5 July', '5th July', 'July 5', 'July 5th' (optionally with a
+ *  4-digit year) and ISO 'YYYY-MM-DD'. Bare months/numbers are NOT treated as
+ *  dates, so ordinary keyword searches are never hijacked. */
+function parse_search_date(string $q): ?array {
+    $q = trim($q);
+    if ($q === '') {
+        return null;
+    }
+    $months = [
+        'january' => 1, 'jan' => 1, 'february' => 2, 'feb' => 2, 'march' => 3, 'mar' => 3,
+        'april' => 4, 'apr' => 4, 'may' => 5, 'june' => 6, 'jun' => 6, 'july' => 7, 'jul' => 7,
+        'august' => 8, 'aug' => 8, 'september' => 9, 'sep' => 9, 'sept' => 9, 'october' => 10,
+        'oct' => 10, 'november' => 11, 'nov' => 11, 'december' => 12, 'dec' => 12,
+    ];
+
+    // ISO: 2026-07-05
+    if (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})$/', $q, $m)) {
+        [$y, $mo, $d] = [(int) $m[1], (int) $m[2], (int) $m[3]];
+        return checkdate($mo, $d, $y) ? ['ymd' => sprintf('%04d-%02d-%02d', $y, $mo, $d)] : null;
+    }
+
+    $monthAlt = implode('|', array_keys($months));
+    $mo = 0; $d = 0; $y = null;
+    if (preg_match('/^(\d{1,2})(?:st|nd|rd|th)?\s+(' . $monthAlt . ')(?:\s+(\d{4}))?$/i', $q, $m)) {
+        // "5 July" / "5th July" / "5 July 2026"
+        $d = (int) $m[1]; $mo = $months[strtolower($m[2])]; $y = isset($m[3]) ? (int) $m[3] : null;
+    } elseif (preg_match('/^(' . $monthAlt . ')\s+(\d{1,2})(?:st|nd|rd|th)?(?:\s+(\d{4}))?$/i', $q, $m)) {
+        // "July 5" / "July 5th" / "July 5 2026"
+        $mo = $months[strtolower($m[1])]; $d = (int) $m[2]; $y = isset($m[3]) ? (int) $m[3] : null;
+    } else {
+        return null;
+    }
+
+    if ($y !== null) {
+        return checkdate($mo, $d, $y) ? ['ymd' => sprintf('%04d-%02d-%02d', $y, $mo, $d)] : null;
+    }
+    // no year → match this month/day in any year (leap year validates Feb 29)
+    return checkdate($mo, $d, 2000) ? ['md' => sprintf('%02d-%02d', $mo, $d)] : null;
 }
 
 /** Friendly "3 hr. ago" style timestamp from a stored datetime string. */

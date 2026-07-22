@@ -17,13 +17,7 @@ require __DIR__ . '/../app/views/header.php';
   <div class="shell">
 
     <nav class="left">
-      <a class="nav" href="/"><svg class="ico"><use href="#i-home"/></svg>Home</a>
-      <a class="nav" href="/archive.php"><svg class="ico"><use href="#i-clock"/></svg>Archive</a>
-      <div class="rail-sep"></div>
-      <div class="rail-label">Community</div>
-      <a class="nav" href="/about.php"><svg class="ico"><use href="#i-info"/></svg>About Bob</a>
-      <a class="nav" href="/faq.php"><svg class="ico"><use href="#i-comment"/></svg>FAQ</a>
-      <a class="nav" href="/contact.php"><svg class="ico"><use href="#i-mail"/></svg>Contact</a>
+      <?php include __DIR__ . '/../app/views/leftnav.php'; ?>
     </nav>
 
     <main class="center">
@@ -39,14 +33,15 @@ require __DIR__ . '/../app/views/header.php';
         <ul>
           <li><b>What you post.</b> The comments and replies you submit, and the name you optionally attach to them.</li>
           <li><b>An email address — only if you give one.</b> When you use “Ask Bob a question”, “Send feedback”, or the Contact form, you may add an email so Bob can reply. It is never required, and never shown publicly.</li>
-          <li><b>Two small cookies.</b> A session cookie that keeps the site working (and remembers the name you last commented with, on this device), and a <i>like</i> cookie that records which posts you have liked so you are not counted twice. That like cookie is the only “identity” behind a like.</li>
+          <li><b>One small cookie.</b> A session cookie that keeps the site working — and remembers the name you last commented with, on this device. That is the only cookie we set.</li>
+          <li><b>Anonymous search logs.</b> The words you type into search and how many results came back, with a timestamp. This is <i>not</i> linked to you — no IP address, no name, no cookie tie-in.</li>
         </ul>
 
         <h2>What we do with it</h2>
         <ul>
           <li>Show your comment or reply once Bob has approved it.</li>
-          <li>Remember your likes so tapping the heart again removes them.</li>
           <li>Let Bob read and, if you left an email, reply to a question or note you sent in.</li>
+          <li>Keep an anonymous tally of what people search for, so Bob can see what readers are looking for and write better mornings.</li>
         </ul>
 
         <h2>What we don’t do</h2>

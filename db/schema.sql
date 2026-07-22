@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS questions (
   body          TEXT    NOT NULL,
   image_url     TEXT,                                   -- optional admin image
   created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
-  like_count    INTEGER NOT NULL DEFAULT 0,             -- running counter (denormalised)
   comment_count INTEGER NOT NULL DEFAULT 0,             -- approved comments only
   post_number   INTEGER                                 -- permanent #1,2,3… in the order posts are created
 );
@@ -23,19 +22,8 @@ CREATE TABLE IF NOT EXISTS comments (
   media_url      TEXT,                                  -- pasted image/gif link (phase 1)
   is_admin_reply INTEGER NOT NULL DEFAULT 0,            -- 1 = Bob's own reply
   approved       INTEGER NOT NULL DEFAULT 0,            -- 0 = pending, 1 = visible
-  like_count     INTEGER NOT NULL DEFAULT 0,
   reply_count    INTEGER NOT NULL DEFAULT 0,
   created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
-);
-
--- One like per browser, for a question OR a comment. The UNIQUE row stops double-liking.
-CREATE TABLE IF NOT EXISTS likes (
-  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  target_type TEXT    NOT NULL CHECK (target_type IN ('question','comment')),
-  target_id   INTEGER NOT NULL,
-  voter_token TEXT    NOT NULL,                         -- a cookie value; the only "identity"
-  created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
-  UNIQUE (target_type, target_id, voter_token)
 );
 
 -- Admin login(s).
@@ -64,6 +52,16 @@ CREATE TABLE IF NOT EXISTS feedback (
   created_at TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Anonymous search log: what people searched + how many results came back.
+-- No IP, no session id — not linked to any person.
+CREATE TABLE IF NOT EXISTS searches (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  query        TEXT    NOT NULL,
+  result_count INTEGER NOT NULL DEFAULT 0,
+  created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_questions_created   ON questions (created_at);
 CREATE INDEX IF NOT EXISTS idx_questions_number    ON questions (post_number);
 CREATE INDEX IF NOT EXISTS idx_comments_q_approved ON comments (question_id, approved);
+CREATE INDEX IF NOT EXISTS idx_searches_created    ON searches (created_at);

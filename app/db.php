@@ -50,7 +50,12 @@ try {
                 ->execute(['bob', password_hash('changeme', PASSWORD_DEFAULT)]);
         }
     } else {
-        // self-heal an older database: make sure the post_number column exists
+        // self-heal an existing database. schema.sql is all "CREATE ... IF NOT EXISTS",
+        // so re-running it is a no-op for existing tables but creates any NEW ones (e.g.
+        // the searches table) that a database built before this version is missing.
+        $pdo->exec(file_get_contents(__DIR__ . '/../db/schema.sql'));
+
+        // older databases also need the post_number column backfilled
         $hasPostNumber = (int) $pdo->query(
             "SELECT COUNT(*) FROM pragma_table_info('questions') WHERE name = 'post_number'"
         )->fetchColumn();

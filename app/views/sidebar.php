@@ -1,10 +1,7 @@
 <?php
-/** Right rail: Ask Bob + Feedback. Forms post to /ask.php and /feedback.php. */
-$sidebarFlash = flash_get();
+/** Right rail: Ask Bob + Feedback. Forms post to /ask.php and /feedback.php.
+ *  (The flash confirmation is rendered once as a top banner in header.php.) */
 ?>
-<?php if ($sidebarFlash): ?>
-  <div class="flash-note"><span class="dot"></span><?= e($sidebarFlash) ?></div>
-<?php endif; ?>
 <div class="widget">
   <div class="widget-h"><svg class="ico ico-sm"><use href="#i-ask"/></svg>Ask Bob a question</div>
   <div class="widget-b">

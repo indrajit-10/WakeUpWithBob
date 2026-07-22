@@ -10,13 +10,23 @@
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --radius:16px;
 }
-@media (prefers-color-scheme:dark){:root{
+/* Dark palette. Applied automatically when the OS prefers dark — UNLESS the
+   visitor has explicitly forced light via the header toggle — and always when
+   they've explicitly forced dark. (The toggle sets data-theme on <html>.) */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0B1421; --card:#13202E; --elev:#1B2A3B; --text:#E6EDF5; --meta:#93A6B9;
   --border:#243449; --pill:#1B2A3B; --pill-h:#243449;
   --blue:#5AA2F2; --blue-tint:#122844; --red:#FF6B6B; --red-tint:#3A1A1C;
   --orange:#FF9036; --orange-tint:#3A2410; --green:#4FB477; --green-tint:#16311F;
   --g123-red:#F0555A; --g123-blue:#6AA0E6;
 }}
+:root[data-theme="dark"]{
+  --bg:#0B1421; --card:#13202E; --elev:#1B2A3B; --text:#E6EDF5; --meta:#93A6B9;
+  --border:#243449; --pill:#1B2A3B; --pill-h:#243449;
+  --blue:#5AA2F2; --blue-tint:#122844; --red:#FF6B6B; --red-tint:#3A1A1C;
+  --orange:#FF9036; --orange-tint:#3A2410; --green:#4FB477; --green-tint:#16311F;
+  --g123-red:#F0555A; --g123-blue:#6AA0E6;
+}
 
 *{box-sizing:border-box}
 body{margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased}
@@ -47,6 +57,71 @@ a{color:inherit; text-decoration:none}
 .searchwrap:focus-within{box-shadow:0 0 0 3px var(--blue-tint), 0 3px 14px -2px color-mix(in srgb, var(--blue) 55%, transparent)}
 .searchwrap input{flex:1; border:0; background:transparent; color:var(--text); font:inherit; font-size:.92rem; outline:none}
 .searchwrap input::placeholder{color:var(--meta)}
+
+/* header controls: hamburger (mobile only) + light/dark toggle (all sizes) */
+.tb-left{display:flex; align-items:center; gap:10px}
+.tb-right{display:flex; align-items:center; gap:14px}
+.tb-brand{display:inline-flex; align-items:center}
+.hamburger{display:none; align-items:center; justify-content:center; width:40px; height:40px; padding:0; border:0; border-radius:10px; background:transparent; color:var(--text); cursor:pointer}
+.hamburger:hover{background:var(--elev)}
+.hamburger .ico{width:22px; height:22px}
+.theme-toggle{display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; padding:0; border:0; border-radius:10px; background:transparent; color:var(--text); cursor:pointer}
+.theme-toggle:hover{background:var(--elev)}
+.theme-toggle .ico{width:20px; height:20px}
+/* show the glyph for the theme you'd switch TO, based on the EFFECTIVE theme */
+.theme-toggle .ico-sun{display:none}
+.theme-toggle .ico-moon{display:block}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .theme-toggle .ico-sun{display:block}
+  :root:not([data-theme="light"]) .theme-toggle .ico-moon{display:none}
+}
+:root[data-theme="dark"] .theme-toggle .ico-sun{display:block}
+:root[data-theme="dark"] .theme-toggle .ico-moon{display:none}
+:root[data-theme="light"] .theme-toggle .ico-sun{display:none}
+:root[data-theme="light"] .theme-toggle .ico-moon{display:block}
+
+/* keep the main column shrinkable so long content never forces sideways scroll on mobile */
+.center{min-width:0}
+
+/* mobile slide-in drawer (nav + widgets). Hidden entirely on desktop. */
+.mdrawer{display:none; position:fixed; inset:0; z-index:60}
+.mdrawer-backdrop{position:absolute; inset:0; background:rgba(6,12,20,.5)}
+.mdrawer-panel{position:absolute; top:0; left:0; bottom:0; width:min(86vw,340px); background:var(--bg);
+  border-right:1px solid var(--border); box-shadow:0 10px 40px rgba(6,12,20,.35);
+  padding:16px 16px 28px; overflow-y:auto; display:flex; flex-direction:column; gap:6px}
+.mdrawer-close{align-self:flex-end; width:36px; height:36px; padding:0; border:0; background:transparent;
+  color:var(--meta); font-size:26px; line-height:1; border-radius:8px; cursor:pointer}
+.mdrawer-close:hover{color:var(--text); background:var(--elev)}
+.mdrawer-nav{display:flex; flex-direction:column; gap:3px; margin-bottom:14px}
+.mdrawer-widgets{display:flex; flex-direction:column; gap:14px}
+
+/* archive month navigation (jump dropdown + prev/next arrows) */
+.arch-nav{display:flex; align-items:center; gap:12px; margin-bottom:16px}
+.arch-arrow{display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:9px; background:var(--pill); color:var(--text); font-size:18px; font-weight:800; text-decoration:none; flex:none}
+.arch-arrow:hover{background:var(--pill-h)}
+.arch-arrow.disabled{opacity:.4; pointer-events:none}
+.arch-jump{flex:1; min-width:0}
+.arch-jump select{width:100%; background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font:inherit; font-size:.95rem; cursor:pointer}
+.arch-jump select:focus{outline:none; border-color:var(--blue)}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
+
+/* one-shot flash confirmation — shown once as a top banner (see header.php) */
+.flash-bar{max-width:var(--wrap); margin:14px auto 0; padding:0 20px}
+
+/* home: "no matches — here's the popular one" note */
+.search-note{background:var(--blue-tint); color:var(--text); border:1px solid var(--blue); border-radius:12px; padding:11px 14px; margin-bottom:14px; font-size:.92rem}
+
+/* admin: User Search Data report (day by day) */
+.srch-day{border-top:1px solid var(--border); padding:12px 0}
+.srch-day:first-child{border-top:0; padding-top:2px}
+.srch-day-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+.srch-day-date{font-weight:700; font-size:.95rem}
+.srch-day-count{font-size:12px; color:var(--meta); flex:none}
+.srch-list{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:6px}
+.srch-item{display:flex; align-items:baseline; justify-content:space-between; gap:12px; background:var(--elev); border-radius:10px; padding:8px 12px}
+.srch-q{font-weight:600; color:var(--text); overflow-wrap:anywhere}
+.srch-meta{font-size:12px; color:var(--meta); white-space:nowrap; flex:none}
+.srch-empty{margin:8px 0 0; font-size:.9rem; color:var(--meta); font-style:italic}
 
 /* shell */
 .app{max-width:var(--wrap); margin:0 auto}
@@ -128,10 +203,6 @@ a{color:inherit; text-decoration:none}
 .pill{display:inline-flex; align-items:center; gap:7px; background:var(--pill); border:0; color:var(--text); font:inherit; font-weight:700; font-size:13px; border-radius:999px; padding:9px 15px; cursor:pointer; text-decoration:none}
 .pill:hover{background:var(--pill-h)}
 .pill .num{font-variant-numeric:tabular-nums}
-.like .ico{color:var(--meta)}
-.like:hover .ico{color:var(--red)}
-.like.liked{background:var(--red-tint); color:var(--red)}
-.like.liked .ico{color:var(--red)}
 
 /* top comment preview */
 .top-comment{margin-top:14px; border-top:1px solid var(--border); padding-top:13px}
@@ -252,8 +323,10 @@ a{color:inherit; text-decoration:none}
 .shell--question .comment-section .comment-card{width:100%}
 .shell--question .comment-reply-list{margin-left:12px}
 @media (max-width:760px){
-  .shell{grid-template-columns:1fr} .left{display:none}
-  .topbar-inner{display:flex; gap:12px} .tb-right{display:none} .tb-center{width:auto; flex:1} .searchwrap{width:100%}
+  .shell{grid-template-columns:minmax(0,1fr); padding:16px} .left{display:none}
+  .topbar-inner{display:flex; gap:10px} .tb-lockup{display:none} .tb-center{width:auto; flex:1} .searchwrap{width:100%}
+  .hamburger{display:inline-flex}
+  .mdrawer.open{display:block}
 }
 /* ============ QUESTION PAGE (redesigned) ============ */
 .backlink{display:inline-flex; align-items:center; gap:6px; font-size:.9rem; font-weight:700; color:var(--blue); margin-bottom:14px}
@@ -311,9 +384,6 @@ a{color:inherit; text-decoration:none}
 .add-comment-bar .btn-orange{width:auto; padding:11px 24px}
 .qempty{background:var(--card); border:1px dashed var(--border); border-radius:14px; padding:26px 20px; text-align:center; color:var(--meta)}
 
-/* liked state on a comment's like button (Instagram-style toggle) */
-.cmt-btn.liked{background:var(--red-tint); color:var(--red)}
-.cmt-btn.liked .ico{color:var(--red)}
 @media (max-width:760px){ .cmt-replies{margin-left:8px; padding-left:10px} }
 
 /* ============ ADMIN: post history + pagination + edit ============ */
@@ -521,7 +591,6 @@ a{color:inherit; text-decoration:none}
 .stats-title{font-weight:700; color:var(--text); text-decoration:none}
 .stats-title:hover{color:var(--blue)}
 .stats-date{font-size:12px; color:var(--meta); margin-top:2px}
-.stats-likes{color:var(--red); font-weight:700}
 .stats-pending{display:inline-block; min-width:22px; padding:1px 8px; border-radius:999px; background:var(--orange); color:#fff; font-weight:800; font-size:12px}
 .stats-zero{color:var(--meta)}
 @media (max-width:600px){ .stat-tiles{grid-template-columns:repeat(2,1fr)} }

@@ -9,6 +9,8 @@
  *   data-toggle-class="visible"             → which class to toggle (default: "visible")
  *   data-scrollto="ELEMENT_ID"              → click smooth-scrolls #ELEMENT_ID into view
  *   data-dismiss-closest=".selector"        → click removes the nearest matching ancestor
+ *   data-theme-toggle                       → click flips light/dark and remembers it
+ *   data-navigate (on a <select>)           → changing it navigates to the chosen option's value
  *   data-confirm="Are you sure?"            → submit is cancelled unless the user confirms
  */
 (function () {
@@ -38,12 +40,31 @@
         box.remove();
       }
     }
+
+    if (event.target.closest('[data-theme-toggle]')) {
+      var root = document.documentElement;
+      var current = root.getAttribute('data-theme');
+      if (current !== 'dark' && current !== 'light') {
+        // no explicit choice yet — start from whatever the OS is showing
+        current = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      var next = current === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('theme', next); } catch (e) {}
+    }
   });
 
   document.addEventListener('submit', function (event) {
     var form = event.target.closest('[data-confirm]');
     if (form && !window.confirm(form.getAttribute('data-confirm'))) {
       event.preventDefault();
+    }
+  });
+
+  document.addEventListener('change', function (event) {
+    var nav = event.target.closest('[data-navigate]');
+    if (nav && nav.value) {
+      window.location.href = nav.value;
     }
   });
 })();

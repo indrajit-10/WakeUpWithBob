@@ -27,8 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect('/contact.php');
 }
 
-$flash = flash_get();
-
 $pageTitle = 'Contact · ' . SITE_NAME;
 require __DIR__ . '/../app/views/header.php';
 ?>
@@ -36,23 +34,13 @@ require __DIR__ . '/../app/views/header.php';
   <div class="shell">
 
     <nav class="left">
-      <a class="nav" href="/"><svg class="ico"><use href="#i-home"/></svg>Home</a>
-      <a class="nav" href="/archive.php"><svg class="ico"><use href="#i-clock"/></svg>Archive</a>
-      <div class="rail-sep"></div>
-      <div class="rail-label">Community</div>
-      <a class="nav" href="/about.php"><svg class="ico"><use href="#i-info"/></svg>About Bob</a>
-      <a class="nav" href="/faq.php"><svg class="ico"><use href="#i-comment"/></svg>FAQ</a>
-      <a class="nav active" href="/contact.php"><svg class="ico"><use href="#i-mail"/></svg>Contact</a>
+      <?php include __DIR__ . '/../app/views/leftnav.php'; ?>
     </nav>
 
     <main class="center">
       <div class="feedhead">
         <b>Contact us</b>
       </div>
-
-      <?php if ($flash): ?>
-        <div class="flash-note"><span class="dot"></span><?= e($flash) ?></div>
-      <?php endif; ?>
 
       <article class="post">
         <p class="post-text">Have a question, a worry, or something you would like taken down? Send Bob a note below and a real person will read it. If you would rather email, reach us at

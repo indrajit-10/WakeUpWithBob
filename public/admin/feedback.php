@@ -7,7 +7,7 @@ if (!admin_logged_in()) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     if (!empty($_POST['done_id'])) {
-        mark_feedback_done((int) $_POST['done_id']);
+        mark_feedback_done(post_int('done_id'));
         redirect('/admin/feedback.php');
     }
 }

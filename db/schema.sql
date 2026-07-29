@@ -9,7 +9,9 @@ CREATE TABLE IF NOT EXISTS questions (
   image_url     TEXT,                                   -- optional admin image
   created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
   comment_count INTEGER NOT NULL DEFAULT 0,             -- approved comments only
-  post_number   INTEGER                                 -- permanent #1,2,3… in the order posts are created
+  post_number   INTEGER                                 -- display label: 1..N in DATE order, RESEQUENCED on
+                                                        -- create/date-edit/delete. Not stable — never use as a
+                                                        -- permalink or a "first ever post" pointer; use id.
 );
 
 -- Public replies. Every one starts pending until Bob approves it.
@@ -59,6 +61,14 @@ CREATE TABLE IF NOT EXISTS searches (
   query        TEXT    NOT NULL,
   result_count INTEGER NOT NULL DEFAULT 0,
   created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Admin-editable settings (simple key/value). e.g. 'alert_email' — the inbox
+-- that receives new-comment / question / feedback alerts, changeable from the
+-- admin Settings page without touching env vars or redeploying.
+CREATE TABLE IF NOT EXISTS settings (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL DEFAULT ''
 );
 
 CREATE INDEX IF NOT EXISTS idx_questions_created   ON questions (created_at);

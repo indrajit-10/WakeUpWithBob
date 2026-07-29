@@ -9,13 +9,17 @@ require __DIR__ . '/../app/db.php';
 
 ensure_session(); // start the session before any output so csrf_field() can set its cookie
 
-$totalPosts = (int) $pdo->query('SELECT COUNT(*) FROM questions')->fetchColumn();
+$totalPosts = (int) $pdo->query('SELECT COUNT(*) FROM questions WHERE ' . published_sql())->fetchColumn();
 
 // Every month that has at least one morning, newest first, with its post count.
-$months = $pdo->query(
-    "SELECT strftime('%Y-%m', created_at) AS ym, COUNT(*) AS n
-     FROM questions GROUP BY ym ORDER BY ym DESC"
-)->fetchAll();
+// Grouped per row in PHP so each post's month is resolved with ITS OWN timezone
+// offset — a single SQL offset would misfile posts from the other DST season.
+$allDates = $pdo->query('SELECT created_at FROM questions WHERE ' . published_sql())
+    ->fetchAll(PDO::FETCH_COLUMN);
+$months = [];
+foreach (count_by_local_month($allDates) as $ym => $n) {
+    $months[] = ['ym' => $ym, 'n' => $n];
+}
 
 // Which month are we viewing? A valid ?m=YYYY-MM that exists, else the latest.
 $monthKeys = array_column($months, 'ym');
@@ -32,12 +36,17 @@ $olderKey = ($idx !== false && $idx < count($monthKeys) - 1) ? $monthKeys[$idx +
 // Posts in the current month, newest first.
 $posts = [];
 if ($current !== '') {
-    $stmt = $pdo->prepare(
-        "SELECT id, post_number, title, created_at, comment_count
-         FROM questions WHERE strftime('%Y-%m', created_at) = ? ORDER BY created_at DESC, id DESC"
-    );
-    $stmt->execute([$current]);
-    $posts = $stmt->fetchAll();
+    // exact UTC bounds for the selected LOCAL month (DST-safe)
+    $range = local_month_utc_range($current);
+    if ($range !== null) {
+        $stmt = $pdo->prepare(
+            "SELECT id, post_number, title, body, created_at, comment_count
+             FROM questions WHERE created_at >= ? AND created_at < ? AND " . published_sql()
+             . " ORDER BY created_at DESC, id DESC"
+        );
+        $stmt->execute([$range[0], $range[1]]);
+        $posts = $stmt->fetchAll();
+    }
 }
 
 $monthLabel = static fn (string $ym): string => date('F Y', strtotime($ym . '-01'));
@@ -94,8 +103,8 @@ require __DIR__ . '/../app/views/header.php';
             <li>
               <span class="post-num">#<?= (int) ($q['post_number'] ?: $q['id']) ?></span>
               <div class="post-hist-main">
-                <a class="post-hist-title" href="/question.php?id=<?= (int) $q['id'] ?>"><?= e($q['title']) ?></a>
-                <div class="post-hist-meta"><?= e(date('M j, Y', strtotime($q['created_at']))) ?> · <?= (int) $q['comment_count'] ?> comments</div>
+                <a class="post-hist-title" href="/question.php?id=<?= (int) $q['id'] ?>"><?= e(post_label($q['title'], $q['body'], $q['post_number'] ?? null)) ?></a>
+                <div class="post-hist-meta"><?= e(date('M j, Y', db_time($q['created_at']))) ?> · <?= (int) $q['comment_count'] ?> comments</div>
               </div>
               <div class="post-hist-actions">
                 <a class="pill" href="/question.php?id=<?= (int) $q['id'] ?>"><svg class="ico ico-sm"><use href="#i-comment"/></svg>Read</a>

@@ -3,6 +3,7 @@
 /data/*.db-shm
 /data/*.db-wal
 /data/*.db-journal
+/data/*.log
 
 # Real secrets live here (copy of config.example.php). Never commit.
 /app/config.php

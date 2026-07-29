@@ -65,7 +65,7 @@ function group_by_post(array $rows): array {
     foreach ($rows as $r) {
         $qid = (int) $r['question_id'];
         if (!isset($groups[$qid])) {
-            $groups[$qid] = ['id' => $qid, 'number' => $r['post_number'] ?: $qid, 'title' => $r['question_title'], 'items' => []];
+            $groups[$qid] = ['id' => $qid, 'number' => $r['post_number'] ?: $qid, 'title' => $r['question_title'], 'body' => $r['question_body'] ?? '', 'items' => []];
         }
         $groups[$qid]['items'][] = $r;
     }
@@ -80,7 +80,7 @@ $bobByParent = [];
 
 if ($tab === 'incoming') {
     $rows = $pdo->query(
-        "SELECT c.*, q.title AS question_title, q.post_number,
+        "SELECT c.*, q.title AS question_title, q.body AS question_body, q.post_number,
                 p.author_name AS parent_author, p.body AS parent_body, p.is_admin_reply AS parent_is_admin
          FROM comments c
          JOIN questions q ON c.question_id = q.id
@@ -92,7 +92,7 @@ if ($tab === 'incoming') {
 } else { // all
     // every approved reader comment, with how many replies Bob has given it
     $rows = $pdo->query(
-        "SELECT c.*, q.title AS question_title, q.post_number,
+        "SELECT c.*, q.title AS question_title, q.body AS question_body, q.post_number,
                 p.author_name AS parent_author, p.body AS parent_body, p.is_admin_reply AS parent_is_admin,
                 (SELECT COUNT(*) FROM comments r WHERE r.parent_id = c.id AND r.is_admin_reply = 1 AND r.approved = 1) AS bob_replies
          FROM comments c
@@ -176,7 +176,7 @@ $filterChip = static function (string $key, string $label, int $count, string $c
         <section class="admin-card mod-post">
           <div class="mod-post-head">
             <a class="mod-post-title" href="/question.php?id=<?= (int) $g['id'] ?>">
-              <span class="post-num">#<?= (int) $g['number'] ?></span> <?= e($g['title']) ?>
+              <span class="post-num">#<?= (int) $g['number'] ?></span> <?= e(post_label($g['title'], $g['body'] ?? '', $g['number'])) ?>
             </a>
             <?php if ($tab === 'incoming'): ?>
               <div class="mod-post-tools">
@@ -206,7 +206,8 @@ $filterChip = static function (string $key, string $label, int $count, string $c
 
                 <div class="mod-head">
                   <b><?= e($c['author_name'] ?: 'A reader') ?></b>
-                  <span class="muted">· <?= e(time_ago($c['created_at'])) ?></span>
+                  <span class="muted" title="<?= e(fmt_datetime($c['created_at'])) ?>">· <?= e(time_ago($c['created_at'])) ?></span>
+                  <span class="mod-time"><?= e(fmt_datetime($c['created_at'])) ?></span>
                   <?php if ($tab === 'all'): ?>
                     <span class="mod-status <?= $replied ? 'mod-status--done' : 'mod-status--todo' ?>">
                       <?= $replied ? '✓ Replied' : 'Needs reply' ?>

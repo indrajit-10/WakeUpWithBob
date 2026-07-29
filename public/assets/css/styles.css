@@ -1,11 +1,12 @@
-/* Wake up with Bob — feed styles (white / blue / red / orange), light + dark. */
+/* Wake up with Bob — feed styles (white / blue / red / accent), light + dark.
+   --orange is the historical variable name for the secondary accent (now #00537c). */
 
 :root{
   --wrap:1500px;
   --bg:#EDF2F8; --card:#FFFFFF; --elev:#F2F6FB; --text:#14212E; --meta:#5A6B7B;
   --border:#DDE5EF; --pill:#EDF2F9; --pill-h:#E1EAF4;
   --blue:#1666C7; --blue-tint:#E2EDFB; --red:#E11B22; --red-tint:#FBE2E3;
-  --orange:#FF6A00; --orange-tint:#FFE7D2; --green:#1F9D55; --green-tint:#E1F3E7;
+  --orange:#00537c; --orange-tint:#DCEAF3; --orange-btn:#00537c; --green:#1F9D55; --green-tint:#E1F3E7;
   --g123-red:#E11B22; --g123-blue:#1B4DA1;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --radius:16px;
@@ -17,14 +18,14 @@
   --bg:#0B1421; --card:#13202E; --elev:#1B2A3B; --text:#E6EDF5; --meta:#93A6B9;
   --border:#243449; --pill:#1B2A3B; --pill-h:#243449;
   --blue:#5AA2F2; --blue-tint:#122844; --red:#FF6B6B; --red-tint:#3A1A1C;
-  --orange:#FF9036; --orange-tint:#3A2410; --green:#4FB477; --green-tint:#16311F;
+  --orange:#4FA3CE; --orange-tint:#0E2F42; --orange-btn:#1F76A6; --green:#4FB477; --green-tint:#16311F;
   --g123-red:#F0555A; --g123-blue:#6AA0E6;
 }}
 :root[data-theme="dark"]{
   --bg:#0B1421; --card:#13202E; --elev:#1B2A3B; --text:#E6EDF5; --meta:#93A6B9;
   --border:#243449; --pill:#1B2A3B; --pill-h:#243449;
   --blue:#5AA2F2; --blue-tint:#122844; --red:#FF6B6B; --red-tint:#3A1A1C;
-  --orange:#FF9036; --orange-tint:#3A2410; --green:#4FB477; --green-tint:#16311F;
+  --orange:#4FA3CE; --orange-tint:#0E2F42; --orange-btn:#1F76A6; --green:#4FB477; --green-tint:#16311F;
   --g123-red:#F0555A; --g123-blue:#6AA0E6;
 }
 
@@ -156,7 +157,7 @@ a{color:inherit; text-decoration:none}
 .inline-textarea{min-height:90px; resize:vertical}
 .inline-input:focus,.inline-textarea:focus{border-color:var(--blue); box-shadow:0 0 0 4px rgba(22,102,199,.08)}
 .inline-comment{background:var(--elev); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:14px}
-.inline-comment.pending{border-color:var(--orange); background:rgba(255,106,0,.08)}
+.inline-comment.pending{border-color:var(--orange); background:rgba(0,83,124,.08)}
 .inline-comment-body{color:var(--text); margin-bottom:8px}
 .inline-comment-meta{font-size:.87rem; color:var(--orange); font-weight:700}
 .comment-card{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:18px 20px; margin-bottom:16px}
@@ -188,6 +189,21 @@ a{color:inherit; text-decoration:none}
 .post-title a{color:var(--text)}
 .post-title a:hover{color:var(--blue)}
 .post-text{font-size:1.02rem; line-height:1.62; color:var(--text); margin:0 0 12px; max-width:70ch}
+/* Author-written text (post bodies, comments, inbox messages): keep the writer's
+   own line breaks and blank lines instead of letting HTML collapse them into one
+   paragraph. `pre-wrap` still soft-wraps long lines; `overflow-wrap` stops a
+   pasted URL or one huge word from pushing the layout sideways.
+   Covers every surface that shows text somebody typed into a textarea:
+   post bodies (feed + question page), the public comment thread (reader
+   comments, Bob's replies, the pending-comment preview), the feed card's
+   top-comment, and the admin moderation / inbox views.
+   NOTE: applied via .post-body — never to .post-text itself, because the static
+   pages (about/terms/privacy/contact) hand-indent their markup and would then
+   render that source whitespace. Titles, author names and search queries are
+   deliberately excluded: they come from single-line inputs. */
+.post-body, .cmt-body, .tc-text,
+.mod-body, .mod-bobreply-body, .inbox-body{
+  white-space:pre-wrap; overflow-wrap:anywhere}
 .post-img{margin:14px 0; border-radius:14px; border:1px solid var(--border); aspect-ratio:16/8; background-size:cover; background-position:center}
 
 /* Premium question page styling */
@@ -243,7 +259,7 @@ a{color:inherit; text-decoration:none}
 .w-input:focus,.w-textarea:focus{border-color:var(--blue)}
 .tiny{font-size:11.5px; color:var(--meta); margin-top:7px; display:flex; align-items:center; gap:7px}
 .tiny .dot{width:6px; height:6px; border-radius:50%; background:var(--green); flex:none}
-.btn-orange{display:inline-flex; align-items:center; justify-content:center; gap:7px; background:var(--orange); color:#fff; font-weight:800; font-size:.9rem; border:0; border-radius:999px; padding:11px 18px; cursor:pointer; width:100%}
+.btn-orange{display:inline-flex; align-items:center; justify-content:center; gap:7px; background:var(--orange-btn); color:#fff; font-weight:800; font-size:.9rem; border:0; border-radius:999px; padding:11px 18px; cursor:pointer; width:100%}
 .btn-orange:hover{filter:brightness(1.06)}
 .comm-name{display:flex; align-items:center; gap:11px; font-weight:800; font-size:1.05rem; margin-bottom:12px}
 .comm-name .avatar{width:34px; height:34px}
@@ -405,9 +421,68 @@ a{color:inherit; text-decoration:none}
 .post-hist-meta{font-size:12px; color:var(--meta); margin-top:3px}
 .post-hist-actions{display:flex; align-items:center; gap:8px; flex:none}
 .post-hist-actions .pill{padding:7px 14px; text-decoration:none}
+.opt{font-weight:400; color:var(--meta); font-size:.85em}
+/* .tiny is display:flex, which would turn each <b> into a flex item — force normal text flow */
+.pub-hint{display:block; margin:-4px 0 4px; line-height:1.55; font-size:11.5px; color:var(--meta)}
+.badge-sched{display:inline-block; margin-left:6px; background:var(--orange-tint,#fff1e6); color:var(--orange);
+  font-size:10px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; padding:2px 8px; border-radius:999px}
+
+/* --- composer toolbar: bold / italic / underline + emoji picker --- */
+.editor-label{display:block}
+.editor-bar{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  background:var(--elev); border:1px solid var(--border); border-bottom:0;
+  border-radius:var(--radius) var(--radius) 0 0; padding:7px 9px; margin-top:6px}
+.editor-btns{display:flex; align-items:center; gap:6px}
+.ed-btn{font:inherit; font-size:.95rem; line-height:1; min-width:34px; height:32px; padding:0 9px;
+  background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:8px; cursor:pointer}
+.ed-btn:hover{background:var(--pill)}
+.ed-btn--b{font-weight:800}
+.ed-btn--i{font-style:italic; font-family:Georgia,serif}
+.ed-btn--u{text-decoration:underline}
+.ed-btn--emoji{display:inline-flex; align-items:center; gap:4px}
+.ed-caret{font-size:9px; color:var(--meta)}
+.editor-hint{font-size:12px; color:var(--meta)}
+/* the toolbar sits flush on top of its textarea */
+.editor-label textarea{border-top-left-radius:0; border-top-right-radius:0; margin-top:0}
+
+.emoji-wrap{position:relative; display:inline-block}
+.emoji-panel{display:none; position:absolute; z-index:40; top:calc(100% + 6px); left:0; width:min(330px,88vw);
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  box-shadow:0 12px 34px rgba(0,0,0,.17); padding:9px}
+.emoji-panel.visible{display:block}
+.emoji-search input{width:100%; font:inherit; font-size:.9rem; padding:7px 10px;
+  border:1px solid var(--border); border-radius:8px; background:var(--elev); color:var(--text)}
+.emoji-scroll{max-height:260px; overflow-y:auto; margin-top:8px}
+.emoji-group-h{font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--meta); margin:8px 0 5px}
+.emoji-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(34px,1fr)); gap:2px}
+.emoji-btn{font-size:1.28rem; line-height:1; padding:5px 0; background:none; border:0; border-radius:7px; cursor:pointer}
+.emoji-btn:hover{background:var(--pill)}
+@media (max-width:600px){
+  .editor-hint{display:none}
+  .emoji-panel{width:min(300px,92vw)}
+}
+
+/* search-hit highlighting in results (theme-aware, readable in light and dark) */
+mark{background:var(--orange-tint); color:inherit; border-radius:4px; padding:0 2px;
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--orange) 35%, transparent)}
+.post-title mark{background:var(--orange-tint)}
+
+/* author emphasis inside a post body (whitelisted tags from format_post_text) */
+.post-body strong{font-weight:800}
+.post-body em{font-style:italic}
+.post-body u{text-decoration:underline; text-underline-offset:2px}
 .admin-form-actions{display:flex; align-items:center; gap:10px}
 .admin-form-actions .btn-orange{width:auto; padding:11px 22px}
 .admin-form-actions .pill{text-decoration:none}
+/* settings: sending status + key/value facts */
+.admin-status-live{font-weight:700; color:#1a7f37; margin:0 0 6px}
+.admin-status-off{font-weight:700; color:var(--orange); margin:0 0 6px}
+.admin-kv{list-style:none; margin:12px 0 14px; padding:0; display:flex; flex-direction:column; gap:8px}
+.admin-kv li{display:flex; justify-content:space-between; gap:16px; padding:9px 0; border-bottom:1px solid var(--border); font-size:.92rem}
+.admin-kv li span{color:var(--meta)}
+.admin-kv li strong{word-break:break-all; text-align:right}
+.admin-card code{background:var(--elev); border:1px solid var(--border); border-radius:6px; padding:1px 6px; font-size:.85em}
 .pagination{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; padding-top:14px; border-top:1px solid var(--border)}
 .page-link{font-weight:700; font-size:.9rem; color:var(--blue); text-decoration:none; padding:8px 15px; border:1px solid var(--border); border-radius:999px}
 .page-link:hover{background:var(--elev)}
@@ -466,37 +541,16 @@ a{color:inherit; text-decoration:none}
 
 
 /* --- About Bob page (about.php) --- */
-.about-h{font-size:1.15rem; font-weight:800; letter-spacing:-.01em; margin:0 0 14px}
-
-/* how-it-works steps */
-.hiw{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:16px}
-.hiw-step{display:flex; align-items:flex-start; gap:14px}
-.hiw-num{flex:none; width:30px; height:30px; border-radius:50%; display:grid; place-items:center;
-  background:var(--blue-tint); color:var(--blue); font-weight:800; font-size:.95rem; font-variant-numeric:tabular-nums}
-.hiw-body{min-width:0}
-.hiw-h{display:flex; align-items:center; gap:8px; font-size:1rem; font-weight:800; color:var(--text); margin-bottom:3px}
-.hiw-h .ico{color:var(--blue)}
-.hiw-body p{margin:0; font-size:.95rem; line-height:1.55; color:var(--meta); max-width:70ch}
-.hiw-body p a{color:var(--blue); font-weight:700}
-.hiw-body p a:hover{text-decoration:underline}
-
-/* community values list */
-.about-values{margin:0; padding-left:20px; display:grid; gap:8px}
-.about-values li{font-size:.98rem; line-height:1.55; color:var(--meta)}
-.about-values li b{color:var(--text); font-weight:700}
-
-/* 123 Greetings co-brand block */
-.about-cobrand-mark{display:flex; align-items:center; gap:11px; margin-bottom:12px}
-.about-cobrand-mark .avatar{width:34px; height:34px}
-.about-cobrand-mark .g123{font-size:1.15rem}
-.about-cobrand .post-text{margin-bottom:0}
-
-/* call-to-action */
-.about-cta .post-text{margin-bottom:16px}
-.about-cta-row{display:flex; align-items:center; gap:16px; flex-wrap:wrap}
-.about-cta-btn{width:auto; padding:12px 22px; text-decoration:none}
-.about-cta .tiny{margin:0}
-.about-cta-note{font-size:.9rem; line-height:1.5; max-width:52ch; margin:14px 0 0}
+/* About · "Why Bob writes" */
+.about-why .lead-title{margin-bottom:18px}
+.about-why .post-text{max-width:62ch}
+.about-why i{font-style:italic}
+.brand-phrase{color:var(--blue); font-weight:700; font-style:italic}
+.about-question{font-style:italic; font-size:1.5rem; line-height:1.35; font-weight:700;
+  color:var(--blue); margin:6px 0 22px; padding:2px 0 2px 16px; border-left:3px solid var(--blue)}
+.about-verse{line-height:1.95}
+.about-welcome{margin:28px 0 4px; font-size:1.15rem; font-weight:800; color:var(--text); line-height:1.6}
+.about-welcome-sub{font-weight:600; color:var(--meta); font-size:1rem}
 
 /* quiet live-stats footer strip */
 .statstrip{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px;
@@ -628,6 +682,7 @@ a{color:inherit; text-decoration:none}
 .mod-context-quote{font-style:italic}
 .mod-head{font-size:13px; margin-bottom:5px}
 .mod-head b{font-weight:700}
+.mod-time{color:var(--meta); font-size:12px; font-variant-numeric:tabular-nums}
 .mod-body{font-size:1rem; line-height:1.6; color:var(--text); white-space:pre-wrap; margin-bottom:12px}
 .mod-actions{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
 .mod-btn{font:inherit; font-weight:700; font-size:.88rem; border-radius:999px; padding:8px 16px; cursor:pointer; border:1px solid transparent}

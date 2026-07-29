@@ -4,17 +4,22 @@
  * Expects:  $q   (a question row)   and   $top (its top comment row, or false).
  */
 $qid = (int) $q['id'];
+// Set by the feed when a search is active; empty everywhere else, so ordinary
+// browsing renders exactly as before.
+$hl = $highlightTerms ?? [];
 ?>
 <article class="post">
   <div class="post-meta">
     <span class="avatar"><img class="logo" src="/assets/img/logo.svg" alt="" width="19" height="19"></span>
     <a class="community" href="/question.php?id=<?= $qid ?>">Wake up with Bob</a>
     <span>·</span>
-    <span class="time"><?= e(date('F j, Y', strtotime($q['created_at']))) ?></span>
+    <span class="time"><?= e(date('F j, Y', db_time($q['created_at']))) ?></span>
   </div>
 
-  <h2 class="post-title"><a href="/question.php?id=<?= $qid ?>"><?= e($q['title']) ?></a></h2>
-  <p class="post-text"><?= e($q['body']) ?></p>
+  <?php if (trim((string) $q['title']) !== ''): ?>
+    <h2 class="post-title"><a href="/question.php?id=<?= $qid ?>"><?= e_highlight($q['title'], $hl) ?></a></h2>
+  <?php endif; ?>
+  <p class="post-text post-body"><?= format_post_text($q['body'], $hl) ?></p>
 
   <?php if (!empty($q['image_url'])): ?>
     <div class="post-img" style="background-image:url('<?= e(css_url_value($q['image_url'])) ?>')"></div>

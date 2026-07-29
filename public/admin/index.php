@@ -16,8 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!admin_logged_in()) {
-        $username = trim($_POST['username'] ?? '');
-        $password = (string) ($_POST['password'] ?? '');
+        // Reachable before login, so hostile shapes must not crash it.
+        $username = clip($_POST['username'] ?? '', 80);
+        $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
 
         if ($username === '' || $password === '') {
             $errors[] = 'Please enter both your username and password.';
@@ -29,29 +30,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } else {
         if (!empty($_POST['delete_question_id'])) {
-            delete_question((int) $_POST['delete_question_id']);
+            delete_question(post_int('delete_question_id'));
             redirect('/admin/?deleted=1');
         } elseif (!empty($_POST['edit_question_id'])) {
-            $id       = (int) $_POST['edit_question_id'];
+            $id       = post_int('edit_question_id');
             $title    = clip($_POST['title'] ?? '', 200);
             $body     = clip($_POST['body'] ?? '', 8000);
             $imageUrl = clean_http_url($_POST['image_url'] ?? '');
-            if ($title === '' || $body === '') {
-                $errors[] = 'Please add both a title and the question text.';
+            $publishAt = local_input_to_utc($_POST['publish_at'] ?? '');
+            if ($body === '') {
+                $errors[] = 'Please write the post itself — a title is optional, the text is not.';
+                $editQuestion = get_question($id);
+            } elseif (($_POST['publish_at'] ?? '') !== '' && $publishAt === null) {
+                $errors[] = 'That publish date could not be read — please pick it again.';
                 $editQuestion = get_question($id);
             } else {
-                update_question($id, $title, $body, $imageUrl !== '' ? $imageUrl : null);
+                // The date field is prefilled to minute precision, so a submit that
+                // never touched it would otherwise rewrite created_at and drop the
+                // stored seconds — enough to reorder two posts from the same minute
+                // and swap their numbers. Only write the date when it really changed.
+                $existing = get_question($id);
+                if ($existing && $publishAt !== null
+                    && utc_to_local_input($existing['created_at']) === utc_to_local_input($publishAt)) {
+                    $publishAt = null;   // unchanged — leave created_at exactly as it is
+                }
+                update_question($id, $title, $body, $imageUrl !== '' ? $imageUrl : null, $publishAt);
                 redirect('/admin/?updated=1');
             }
         } else {
             $title    = clip($_POST['title'] ?? '', 200);
             $body     = clip($_POST['body'] ?? '', 8000);
             $imageUrl = clean_http_url($_POST['image_url'] ?? '');
-            if ($title === '' || $body === '') {
-                $errors[] = 'Please add both a title and the question text.';
+            $publishAt = local_input_to_utc($_POST['publish_at'] ?? '');
+            if ($body === '') {
+                $errors[] = 'Please write the post itself — a title is optional, the text is not.';
+            } elseif (($_POST['publish_at'] ?? '') !== '' && $publishAt === null) {
+                $errors[] = 'That publish date could not be read — please pick it again.';
             } else {
-                create_question($title, $body, $imageUrl !== '' ? $imageUrl : null);
-                redirect('/admin/?created=1');
+                $newId = create_question($title, $body, $imageUrl !== '' ? $imageUrl : null, $publishAt);
+                // Tell Bob where it actually went: scheduled, straight to the archive
+                // (backdated past the 7-day home window), or live on the feed.
+                $where = is_scheduled($publishAt) ? 'scheduled'
+                    : (($publishAt !== null && db_time($publishAt) < time() - 7 * 86400) ? 'archived' : '1');
+                redirect('/admin/?created=' . $where);
             }
         }
     }
@@ -64,7 +85,9 @@ if (admin_logged_in() && !$editQuestion && !empty($_GET['edit'])) {
 
 // success messages after a redirect (Post/Redirect/Get)
 if (!$errors) {
-    if (!empty($_GET['created'])) $notice = 'Your new morning post is live on the feed.';
+    if (($_GET['created'] ?? '') === 'scheduled') $notice = 'Saved — it will publish by itself at the date and time you set.';
+    elseif (($_GET['created'] ?? '') === 'archived') $notice = 'Posted and filed straight into the archive — it is older than the 7-day home feed.';
+    elseif (!empty($_GET['created'])) $notice = 'Your new morning post is live on the feed.';
     elseif (!empty($_GET['updated'])) $notice = 'Your changes were saved.';
     elseif (!empty($_GET['deleted'])) $notice = 'The post was deleted from the feed.';
 }
@@ -81,7 +104,7 @@ if (admin_logged_in()) {
     $page = min($page, $totalPages);
     $offset = ($page - 1) * $perPage;
     $stmt = $pdo->prepare(
-        'SELECT id, post_number, title, created_at, comment_count
+        'SELECT id, post_number, title, body, created_at, comment_count
          FROM questions ORDER BY COALESCE(post_number, id) DESC, id DESC LIMIT ? OFFSET ?'
     );
     $stmt->bindValue(1, $perPage, PDO::PARAM_INT);
@@ -90,6 +113,7 @@ if (admin_logged_in()) {
     $questions = $stmt->fetchAll();
 }
 
+$extraJs = ['/assets/js/editor.js'];   // composer toolbar (bold / italic / underline + emoji)
 require __DIR__ . '/../../app/views/header.php';
 ?>
 
@@ -148,9 +172,16 @@ require __DIR__ . '/../../app/views/header.php';
             <form class="admin-form" method="post" action="/admin/">
               <?= csrf_field() ?>
               <input type="hidden" name="edit_question_id" value="<?= (int) $editQuestion['id'] ?>">
-              <label><span>Title</span><input type="text" name="title" value="<?= e($editQuestion['title']) ?>" required></label>
-              <label><span>Question</span><textarea name="body" rows="5" required><?= e($editQuestion['body']) ?></textarea></label>
+              <label><span>Title <span class="opt">(optional)</span></span><input type="text" name="title" value="<?= e($editQuestion['title']) ?>"></label>
+              <label class="editor-label"><span>Post</span>
+                <?php $editorTarget = 'edit-body'; include __DIR__ . '/../../app/views/editor-toolbar.php'; ?>
+                <textarea id="edit-body" name="body" rows="12" data-editor-field required><?= e($editQuestion['body']) ?></textarea>
+              </label>
               <label><span>Image URL (optional)</span><input type="url" name="image_url" value="<?= e($editQuestion['image_url'] ?? '') ?>"></label>
+              <label><span>Publish date &amp; time</span>
+                <input type="datetime-local" name="publish_at" value="<?= e(utc_to_local_input($editQuestion['created_at'])) ?>">
+              </label>
+              <p class="muted tiny pub-hint">A past date files it straight into the archive; a future date holds it back until then. Times are <?= e(defined('APP_TIMEZONE') ? APP_TIMEZONE : 'UTC') ?>.</p>
               <div class="admin-form-actions">
                 <button class="btn-orange" type="submit">Save changes</button>
                 <a class="pill" href="/admin/">Cancel</a>
@@ -161,9 +192,16 @@ require __DIR__ . '/../../app/views/header.php';
             <p>Create a new morning question that appears on the public home page.</p>
             <form class="admin-form" method="post" action="/admin/">
               <?= csrf_field() ?>
-              <label><span>Title</span><input type="text" name="title" placeholder="What should Bob ask this morning?" required></label>
-              <label><span>Question</span><textarea name="body" rows="5" placeholder="Write the full question Bob wants the community to respond to." required></textarea></label>
+              <label><span>Title <span class="opt">(optional)</span></span><input type="text" name="title" placeholder="Leave blank to post without a heading"></label>
+              <label class="editor-label"><span>Post</span>
+                <?php $editorTarget = 'post-body'; include __DIR__ . '/../../app/views/editor-toolbar.php'; ?>
+                <textarea id="post-body" name="body" rows="12" data-editor-field placeholder="Write this morning's post. Your line breaks are kept exactly as you type them." required></textarea>
+              </label>
               <label><span>Image URL (optional)</span><input type="url" name="image_url" placeholder="https://example.com/photo.jpg"></label>
+              <label><span>Publish date &amp; time <span class="opt">(optional)</span></span>
+                <input type="datetime-local" name="publish_at" value="">
+              </label>
+              <p class="muted tiny pub-hint">Leave blank to publish now. A <b>past</b> date backdates it into the archive; a <b>future</b> date schedules it — it appears by itself, no cron needed. Times are <?= e(defined('APP_TIMEZONE') ? APP_TIMEZONE : 'UTC') ?>.</p>
               <button class="btn-orange" type="submit">Publish to feed</button>
             </form>
           <?php endif; ?>
@@ -180,8 +218,13 @@ require __DIR__ . '/../../app/views/header.php';
                 <li>
                   <span class="post-num">#<?= (int) $q['post_number'] ?></span>
                   <div class="post-hist-main">
-                    <a class="post-hist-title" href="/question.php?id=<?= (int) $q['id'] ?>"><?= e($q['title']) ?></a>
-                    <div class="post-hist-meta"><?= e($q['created_at']) ?> · <?= (int) $q['comment_count'] ?> comments</div>
+                    <a class="post-hist-title" href="/question.php?id=<?= (int) $q['id'] ?>"><?= e(post_label($q['title'], $q['body'], $q['post_number'] ?? null)) ?></a>
+                    <div class="post-hist-meta">
+                      <?= e(fmt_datetime($q['created_at'])) ?> · <?= (int) $q['comment_count'] ?> comments
+                      <?php if (is_scheduled($q['created_at'])): ?>
+                        <span class="badge-sched">Scheduled</span>
+                      <?php endif; ?>
+                    </div>
                   </div>
                   <div class="post-hist-actions">
                     <a class="pill" href="/admin/?edit=<?= (int) $q['id'] ?>#compose">Edit</a>

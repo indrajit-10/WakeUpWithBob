@@ -14,6 +14,11 @@ $showChrome = $showSearch ?? true;        // public pages get search + nav; admi
   <script src="/assets/js/theme-init.js"></script>
   <link rel="stylesheet" href="/assets/css/styles.css">
   <script src="/assets/js/app.js" defer></script>
+  <?php /* Page-specific scripts (e.g. the admin editor). Local paths only — the
+           CSP allows script-src 'self', and nothing here is ever user-supplied. */ ?>
+  <?php foreach (($extraJs ?? []) as $__js): ?>
+    <script src="<?= e($__js) ?>" defer></script>
+  <?php endforeach; ?>
 </head>
 <body>
 

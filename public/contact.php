@@ -21,7 +21,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $composed = '[Contact] ' . ($name !== '' ? $name . ': ' : '') . $message;
         $stmt = $pdo->prepare('INSERT INTO feedback (body, email) VALUES (?, ?)');
         $stmt->execute([$composed, $email !== '' ? $email : null]);
-        // (an email alert to Bob would fire here once SMTP is wired up)
+        $link = (defined('SITE_URL') ? SITE_URL : '') . '/admin/feedback.php';
+        send_admin_alert(
+            'New contact message' . ($name !== '' ? ' from ' . $name : ''),
+            '<p>New message via the Contact page' . ($name !== '' ? ' from <strong>' . e($name) . '</strong>' : '') . ':</p>'
+            . '<blockquote>' . nl2br(e($message)) . '</blockquote>'
+            . ($email !== '' ? '<p>Reply-to: ' . e($email) . '</p>' : '')
+            . '<p><a href="' . e($link) . '">Open the inbox →</a></p>',
+            'New contact message' . ($name !== '' ? " from $name" : '') . ":\n\n$message\n" . ($email !== '' ? "Reply-to: $email\n" : '') . "\nInbox: $link"
+        );
         flash_set('Thanks for reaching out — your message is with Bob.');
     }
     redirect('/contact.php');

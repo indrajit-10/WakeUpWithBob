@@ -7,7 +7,7 @@ if (!admin_logged_in()) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     if (!empty($_POST['dismiss_id'])) {
-        dismiss_reader_question((int) $_POST['dismiss_id']);
+        dismiss_reader_question(post_int('dismiss_id'));
         redirect('/admin/questions.php');
     }
 }

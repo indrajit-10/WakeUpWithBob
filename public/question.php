@@ -10,7 +10,9 @@ if ($questionId <= 0) {
     exit('Question not found.');
 }
 
-$stmt = $pdo->prepare('SELECT * FROM questions WHERE id = ? LIMIT 1');
+// A scheduled post (publish date still in the future) must not be readable by URL —
+// otherwise a guessed or shared id would leak it before its morning.
+$stmt = $pdo->prepare('SELECT * FROM questions WHERE id = ? AND ' . published_sql() . ' LIMIT 1');
 $stmt->execute([$questionId]);
 $question = $stmt->fetch();
 if (!$question) {
@@ -104,7 +106,7 @@ function render_comment_card(array $comment, array $repliesByParent, int $depth 
     <?php
 }
 
-$pageTitle = $question['title'] . ' · ' . SITE_NAME;
+$pageTitle = post_label($question['title'], $question['body'], $question['post_number'] ?? null) . ' · ' . SITE_NAME;
 require __DIR__ . '/../app/views/header.php';
 ?>
 <div class="app">
@@ -126,11 +128,13 @@ require __DIR__ . '/../app/views/header.php';
           <span class="avatar"><img class="logo" src="/assets/img/logo.svg" alt="" width="19" height="19"></span>
           <a class="community" href="/question.php?id=<?= $questionId ?>">Wake up with Bob</a>
           <span>· Posted by</span> <b class="byline">Bob</b>
-          <span>·</span> <span class="time"><?= e(date('F j, Y', strtotime($question['created_at']))) ?></span>
+          <span>·</span> <span class="time"><?= e(date('F j, Y', db_time($question['created_at']))) ?></span>
         </div>
 
-        <h1 class="post-title lead-title"><?= e($question['title']) ?></h1>
-        <p class="post-text"><?= e($question['body']) ?></p>
+        <?php if (trim((string) $question['title']) !== ''): ?>
+          <h1 class="post-title lead-title"><?= e($question['title']) ?></h1>
+        <?php endif; ?>
+        <p class="post-text post-body"><?= format_post_text($question['body']) ?></p>
 
         <?php if (!empty($question['image_url'])): ?>
           <div class="post-img" style="background-image:url('<?= e(css_url_value($question['image_url'])) ?>')"></div>

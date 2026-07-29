@@ -31,7 +31,7 @@ foreach ($pdo->query('SELECT question_id, COUNT(*) AS n FROM comments WHERE appr
 }
 
 $rows = $pdo->query(
-    "SELECT q.id, q.post_number, q.title, q.created_at, q.comment_count
+    "SELECT q.id, q.post_number, q.title, q.body, q.created_at, q.comment_count
      FROM questions q ORDER BY $orderBy"
 )->fetchAll();
 
@@ -86,8 +86,8 @@ require __DIR__ . '/../../app/views/header.php';
                   <tr>
                     <td class="post-num">#<?= (int) ($q['post_number'] ?: $q['id']) ?></td>
                     <td>
-                      <a class="stats-title" href="/question.php?id=<?= $qid ?>"><?= e($q['title']) ?></a>
-                      <div class="stats-date"><?= e(date('M j, Y', strtotime($q['created_at']))) ?></div>
+                      <a class="stats-title" href="/question.php?id=<?= $qid ?>"><?= e(post_label($q['title'], $q['body'], $q['post_number'] ?? null)) ?></a>
+                      <div class="stats-date"><?= e(date('M j, Y', db_time($q['created_at']))) ?></div>
                     </td>
                     <td class="num"><?= (int) $q['comment_count'] ?></td>
                     <td class="num"><?= $pending > 0 ? '<span class="stats-pending">' . $pending . '</span>' : '<span class="stats-zero">0</span>' ?></td>

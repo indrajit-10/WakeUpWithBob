@@ -2,7 +2,32 @@
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/db.php';
 
+// How long an admin may stay signed in without any activity before we ask for
+// the password again. Default 30 minutes; override with the ADMIN_IDLE_TIMEOUT
+// env var (in seconds). Guards against a 0/negative value falling through.
+if (!defined('ADMIN_IDLE_TIMEOUT')) {
+    $__t = (int) (getenv('ADMIN_IDLE_TIMEOUT') ?: 1800);
+    define('ADMIN_IDLE_TIMEOUT', $__t > 0 ? $__t : 1800);
+}
+
 ensure_session();   // hardened session cookie flags (HttpOnly, SameSite, Secure-on-HTTPS)
+admin_enforce_idle();   // sign out an admin who's been idle too long
+
+/** Auto sign-out an idle admin: if it's been longer than ADMIN_IDLE_TIMEOUT
+ *  since the last request, drop the admin keys so the next page shows the
+ *  sign-in screen again. Otherwise slide the window forward. */
+function admin_enforce_idle(?int $now = null): void {
+    if (empty($_SESSION['admin_id'])) {
+        return;
+    }
+    $now  = $now ?? time();
+    $last = (int) ($_SESSION['admin_last_seen'] ?? 0);
+    if ($now - $last > ADMIN_IDLE_TIMEOUT) {
+        unset($_SESSION['admin_id'], $_SESSION['admin_username'], $_SESSION['admin_last_seen']);
+    } else {
+        $_SESSION['admin_last_seen'] = $now;
+    }
+}
 
 function admin_login(string $username, string $password): bool {
     global $pdo;
@@ -23,6 +48,7 @@ function admin_login(string $username, string $password): bool {
     session_regenerate_id(true);
     $_SESSION['admin_id'] = (int) $admin['id'];
     $_SESSION['admin_username'] = $admin['username'];
+    $_SESSION['admin_last_seen'] = time();
     return true;
 }
 
@@ -35,14 +61,54 @@ function admin_logout(): void {
     session_destroy();
 }
 
-function create_question(string $title, string $body, ?string $imageUrl = null): int {
+/** Number every post by date, oldest = #1. Called after any insert/edit that can
+ *  change chronology (backdating, scheduling), so the archive always reads 1,2,3…
+ *  in time order instead of in the order Bob happened to type them in. */
+function resequence_post_numbers(): void {
+    global $pdo;
+    $ids = $pdo->query('SELECT id FROM questions ORDER BY created_at ASC, id ASC')->fetchAll(PDO::FETCH_COLUMN);
+    $upd = $pdo->prepare('UPDATE questions SET post_number = ? WHERE id = ?');
+
+    // ONE transaction for the whole renumber. Without it each UPDATE autocommits
+    // (an fsync apiece): ~3.5 s at 1000 posts and ~19 s at 5000, on every publish,
+    // date-edit and delete — versus ~15 ms batched. It also makes the renumber
+    // atomic, so readers never catch two posts sharing a number, and a mid-loop
+    // failure rolls back instead of leaving the sequence permanently duplicated.
+    $owns = !$pdo->inTransaction();
+    if ($owns) {
+        $pdo->beginTransaction();
+    }
+    try {
+        $n = 1;
+        foreach ($ids as $qid) {
+            $upd->execute([$n++, $qid]);
+        }
+        if ($owns) {
+            $pdo->commit();
+        }
+    } catch (\Throwable $e) {
+        if ($owns && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
+}
+
+/** Create a post. $publishAt is a UTC 'Y-m-d H:i:s' string: in the past to backdate
+ *  it into the archive, in the future to schedule it. Null means "right now". */
+function create_question(string $title, string $body, ?string $imageUrl = null, ?string $publishAt = null): int {
     global $pdo;
 
-    // permanent, monotonic post number: 1 for the first post ever, then +1 each time
-    $next = (int) $pdo->query('SELECT COALESCE(MAX(post_number), 0) + 1 FROM questions')->fetchColumn();
-    $stmt = $pdo->prepare('INSERT INTO questions (title, body, image_url, post_number) VALUES (?, ?, ?, ?)');
-    $stmt->execute([$title, $body, $imageUrl, $next]);
-    return (int) $pdo->lastInsertId();
+    if ($publishAt !== null && $publishAt !== '') {
+        $stmt = $pdo->prepare('INSERT INTO questions (title, body, image_url, post_number, created_at) VALUES (?, ?, ?, 0, ?)');
+        $stmt->execute([$title, $body, $imageUrl, $publishAt]);
+    } else {
+        $stmt = $pdo->prepare('INSERT INTO questions (title, body, image_url, post_number) VALUES (?, ?, ?, 0)');
+        $stmt->execute([$title, $body, $imageUrl]);
+    }
+    $newId = (int) $pdo->lastInsertId();
+    resequence_post_numbers();   // keep #1 = the oldest morning, even when backfilling
+    return $newId;
 }
 
 /** Fetch a single question (used to pre-fill the edit form). */
@@ -54,9 +120,16 @@ function get_question(int $questionId): ?array {
     return $q ?: null;
 }
 
-/** Edit an existing question's title / body / image. */
-function update_question(int $questionId, string $title, string $body, ?string $imageUrl = null): void {
+/** Edit an existing question's title / body / image, and optionally move its publish
+ *  date ($publishAt = UTC 'Y-m-d H:i:s'; null leaves the existing date alone). */
+function update_question(int $questionId, string $title, string $body, ?string $imageUrl = null, ?string $publishAt = null): void {
     global $pdo;
+    if ($publishAt !== null && $publishAt !== '') {
+        $stmt = $pdo->prepare('UPDATE questions SET title = ?, body = ?, image_url = ?, created_at = ? WHERE id = ?');
+        $stmt->execute([$title, $body, $imageUrl, $publishAt, $questionId]);
+        resequence_post_numbers();   // the date moved, so chronology may have changed
+        return;
+    }
     $stmt = $pdo->prepare('UPDATE questions SET title = ?, body = ?, image_url = ? WHERE id = ?');
     $stmt->execute([$title, $body, $imageUrl, $questionId]);
 }
@@ -66,6 +139,10 @@ function delete_question(int $questionId): void {
 
     $stmt = $pdo->prepare('DELETE FROM questions WHERE id = ?');
     $stmt->execute([$questionId]);
+    // Close the gap the deletion leaves, so numbering stays a contiguous 1..N in
+    // date order (create/edit already resequence — without this, deleting #3 would
+    // read 1,2,4,5 until the next post silently renumbered everything anyway).
+    resequence_post_numbers();
 }
 
 function approve_comment(int $commentId): void {

@@ -9,16 +9,31 @@
  */
 require_once __DIR__ . '/config.php';
 
+// Timestamps are stored in UTC; render them in the operator's timezone so
+// "just now" / dates line up with the wall clock. Defaults to UTC.
+date_default_timezone_set(
+    defined('APP_TIMEZONE') && in_array(APP_TIMEZONE, timezone_identifiers_list(), true)
+        ? APP_TIMEZONE
+        : 'UTC'
+);
+
 // --- fail safe: never leak stack traces or file paths to visitors ------------------
 // Set  define('DEBUG', true);  in config.php while developing to see full errors on screen.
 $__debug = defined('DEBUG') && DEBUG;
 @ini_set('display_errors', $__debug ? '1' : '0');
 error_reporting(E_ALL);
 if (!$__debug && PHP_SAPI !== 'cli') {
+    // Buffer the page so a mid-render exception can still set a real 500 and replace
+    // the half-written HTML. Without this the status was already committed and broken
+    // pages went out as "200 OK" with a truncated body — invisible to uptime checks.
+    ob_start();
     set_exception_handler(static function (\Throwable $e): void {
         error_log((string) $e);                          // logged for the operator, never shown
-        http_response_code(500);
+        while (ob_get_level() > 0) {                     // discard the partial page
+            ob_end_clean();
+        }
         if (!headers_sent()) {
+            http_response_code(500);
             header('Content-Type: text/plain; charset=utf-8');
         }
         echo 'Something went wrong on our end. Please try again in a moment.';

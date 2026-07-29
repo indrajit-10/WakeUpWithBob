@@ -14,10 +14,13 @@ if (!admin_logged_in()) {
 $totalSearches = (int) $pdo->query('SELECT COUNT(*) FROM searches')->fetchColumn();
 
 // Months that have searches, newest first, with counts.
-$months    = $pdo->query(
-    "SELECT strftime('%Y-%m', created_at) AS ym, COUNT(*) AS n
-     FROM searches GROUP BY ym ORDER BY ym DESC"
-)->fetchAll();
+// per-row local grouping, so a search logged near local midnight cannot be
+// bucketed into a month whose page then refuses to render it
+$allSearchDates = $pdo->query('SELECT created_at FROM searches')->fetchAll(PDO::FETCH_COLUMN);
+$months = [];
+foreach (count_by_local_month($allSearchDates) as $ym => $n) {
+    $months[] = ['ym' => $ym, 'n' => $n];
+}
 $monthKeys = array_column($months, 'ym');
 
 // Always include the current month so 'today' is browsable even with no searches yet.
@@ -38,14 +41,15 @@ $newerKey = ($idx !== false && $idx > 0) ? $monthKeys[$idx - 1] : null;
 $olderKey = ($idx !== false && $idx < count($monthKeys) - 1) ? $monthKeys[$idx + 1] : null;
 
 // All searches in the selected month, grouped by calendar day.
+$range = local_month_utc_range($current) ?? ['9999-01-01 00:00:00', '9999-01-02 00:00:00'];
 $stmt = $pdo->prepare(
     "SELECT query, result_count, created_at FROM searches
-     WHERE strftime('%Y-%m', created_at) = ? ORDER BY created_at DESC"
+     WHERE created_at >= ? AND created_at < ? ORDER BY created_at DESC"
 );
-$stmt->execute([$current]);
+$stmt->execute([$range[0], $range[1]]);
 $byDay = [];
 foreach ($stmt->fetchAll() as $r) {
-    $byDay[substr((string) $r['created_at'], 0, 10)][] = $r;
+    $byDay[date('Y-m-d', db_time((string) $r['created_at']))][] = $r;
 }
 
 // Every day of the month, newest first. For the current month, stop at today.
@@ -110,7 +114,7 @@ require __DIR__ . '/../../app/views/header.php';
                   <?php foreach ($items as $it): ?>
                     <li class="srch-item">
                       <span class="srch-q">“<?= e($it['query']) ?>”</span>
-                      <span class="srch-meta"><?= (int) $it['result_count'] ?> result<?= (int) $it['result_count'] === 1 ? '' : 's' ?> · <?= e(date('g:i a', strtotime((string) $it['created_at']))) ?></span>
+                      <span class="srch-meta"><?= (int) $it['result_count'] ?> result<?= (int) $it['result_count'] === 1 ? '' : 's' ?> · <?= e(date('g:i a', db_time((string) $it['created_at']))) ?></span>
                     </li>
                   <?php endforeach; ?>
                 </ul>

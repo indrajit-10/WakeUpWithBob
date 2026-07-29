@@ -8,11 +8,14 @@ require __DIR__ . '/../app/db.php';
 
 ensure_session(); // start the session before any output so csrf_field() can set its cookie
 
-// --- read the sort + search from the URL ($_GET) ---
-$sort   = $_GET['sort'] ?? 'latest';
-$search = trim($_GET['q'] ?? '');
-
 $sortLabels = ['latest' => 'Latest', 'engaging' => 'Most engaging'];
+
+// --- read the sort + search from the URL ($_GET) ---
+// Neither may be assumed to be a string: "?sort[]=x" / "?q[]=x" would otherwise
+// throw a TypeError and 500 the page. $sort is whitelisted; clip() is array-safe.
+$rawSort = $_GET['sort'] ?? 'latest';
+$sort    = (is_string($rawSort) && isset($sortLabels[$rawSort])) ? $rawSort : 'latest';
+$search  = clip($_GET['q'] ?? '', 200);
 
 $orderBy = match ($sort) {
     'engaging' => 'comment_count DESC, created_at DESC',   // most discussed first
@@ -31,6 +34,13 @@ if ($search !== '') {
     $score = [];   // relevance terms, summed (higher = better match)
     $whereP = [];
     $scoreP = [];
+    // When the WHOLE query is a date ("5 July"), match on the date alone. OR-ing the
+    // words in as well would drag in every post containing "5" or "July", which on a
+    // real archive is most of it.
+    if ($date !== null) {
+        $words = [];
+    }
+    $highlightTerms = $words;   // the card partial highlights these in the results
     foreach ($words as $w) {
         $like = '%' . addcslashes($w, '%_\\') . '%';       // escape the user's own %/_ wildcards
         $cond = "(title LIKE ? ESCAPE '\\' OR body LIKE ? ESCAPE '\\')";
@@ -38,7 +48,9 @@ if ($search !== '') {
         $score[]  = "CASE WHEN $cond THEN 1 ELSE 0 END";  $scoreP[] = $like; $scoreP[] = $like;
     }
     if ($date !== null) {
-        $dcond = isset($date['ymd']) ? "date(created_at) = ?" : "strftime('%m-%d', created_at) = ?";
+        // compare in APP_TIMEZONE — the date the reader sees, not the stored UTC date
+        $localCol = local_datetime_sql('created_at', isset($date['ymd']) ? $date['ymd'] . ' 12:00:00' : null);
+        $dcond = isset($date['ymd']) ? "date($localCol) = ?" : "strftime('%m-%d', $localCol) = ?";
         $dval  = $date['ymd'] ?? $date['md'];
         $match[] = $dcond;                          $whereP[] = $dval;
         $score[] = "CASE WHEN $dcond THEN 100 ELSE 0 END"; $scoreP[] = $dval;   // date hits rank on top
@@ -46,6 +58,7 @@ if ($search !== '') {
 
     if ($match) {
         $sql = 'SELECT * FROM questions WHERE (' . implode(' OR ', $match) . ')'
+             . ' AND ' . published_sql()          // never surface a scheduled post
              . ' ORDER BY (' . implode(' + ', $score) . ') DESC, created_at DESC';
         $stmt = $pdo->prepare($sql);
         $stmt->execute(array_merge($whereP, $scoreP));
@@ -74,18 +87,22 @@ if ($search !== '') {
     // (The logged result_count above stays 0 — this fallback isn't a real match.)
     if (!$questions) {
         $searchNoResults = true;
+        $highlightTerms  = [];   // the fallback post isn't a match — nothing to highlight
         $questions = $pdo->query(
-            'SELECT * FROM questions ORDER BY comment_count DESC, created_at DESC LIMIT 1'
+            'SELECT * FROM questions WHERE ' . published_sql()
+            . ' ORDER BY comment_count DESC, created_at DESC LIMIT 1'
         )->fetchAll();
     }
 } else {
     // Home shows only the last 7 days; anything older lives in the archive.
-    $stmt = $pdo->prepare("SELECT * FROM questions WHERE created_at >= datetime('now', '-7 days') ORDER BY $orderBy");
+    $stmt = $pdo->prepare("SELECT * FROM questions WHERE created_at >= datetime('now', '-7 days') AND "
+        . published_sql() . " ORDER BY $orderBy");
     $stmt->execute();
     $questions = $stmt->fetchAll();
     // Never leave home blank: if nothing was posted this past week, show the latest one.
     if (!$questions) {
-        $questions = $pdo->query('SELECT * FROM questions ORDER BY created_at DESC LIMIT 1')->fetchAll();
+        $questions = $pdo->query('SELECT * FROM questions WHERE ' . published_sql()
+            . ' ORDER BY created_at DESC LIMIT 1')->fetchAll();
     }
 }
 

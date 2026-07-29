@@ -5,8 +5,8 @@ require __DIR__ . '/../app/db.php';
 require_post();
 csrf_check();
 
-$questionId = isset($_POST['question_id']) ? (int) $_POST['question_id'] : 0;
-$parentId = isset($_POST['parent_id']) ? (int) $_POST['parent_id'] : null;
+$questionId = post_int('question_id');
+$parentId = post_int('parent_id') ?: null;
 $authorName = clip($_POST['author_name'] ?? '', 80);
 $body = clip($_POST['comment_body'] ?? '', 5000);
 
@@ -15,11 +15,14 @@ if ($questionId <= 0 || $body === '') {
 }
 
 // the question must actually exist (otherwise the FK would 500 on insert)
-$qexists = $pdo->prepare('SELECT 1 FROM questions WHERE id = ? LIMIT 1');
-$qexists->execute([$questionId]);
-if (!$qexists->fetchColumn()) {
+$qrow = $pdo->prepare('SELECT title, body, post_number FROM questions WHERE id = ? AND ' . published_sql() . ' LIMIT 1');
+$qrow->execute([$questionId]);
+$qpost = $qrow->fetch();
+if (!$qpost) {
     redirect('/');
 }
+// titles are optional, so fall back to an excerpt / post number for the alert subject
+$qtitle = post_label($qpost['title'], $qpost['body'], $qpost['post_number'] ?? null);
 
 // if this is a reply, the parent must exist AND belong to the same question (no cross-thread replies)
 if ($parentId && $parentId > 0) {
@@ -40,5 +43,16 @@ $stmt->execute([
 $commentId = (int)$pdo->lastInsertId();
 remember_name($authorName);                     // prefill their name next time
 $_SESSION['just_posted_comment'] = $commentId;  // show a translucent "pending" preview once, to this browser
+
+// Best-effort: ping the admin that a comment is waiting for review.
+$who  = $authorName !== '' ? $authorName : 'A reader';
+$link = (defined('SITE_URL') ? SITE_URL : '') . '/admin/comments.php';
+send_admin_alert(
+    'New comment on “' . $qtitle . '”',
+    '<p><strong>' . e($who) . '</strong> commented on “' . e((string) $qtitle) . '”:</p>'
+    . '<blockquote>' . nl2br(e($body)) . '</blockquote>'
+    . '<p><a href="' . e($link) . '">Review it in moderation →</a></p>',
+    "$who commented on \"$qtitle\":\n\n$body\n\nReview: $link"
+);
 
 redirect('/question.php?id=' . $questionId . '#comment-' . $commentId);

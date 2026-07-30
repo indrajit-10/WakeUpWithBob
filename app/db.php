@@ -57,8 +57,14 @@ try {
     if ($db_is_fresh) {
         // first run — build everything
         $pdo->exec(file_get_contents(__DIR__ . '/../db/schema.sql'));
+        // Sample posts, only when asked for. Tolerate a missing/empty seed.sql: a
+        // deployer removing it to force a clean site must not fatal the first request.
         if (!defined('LOAD_SAMPLE_DATA') || LOAD_SAMPLE_DATA) {
-            $pdo->exec(file_get_contents(__DIR__ . '/../db/seed.sql'));
+            $seedFile = __DIR__ . '/../db/seed.sql';
+            $seed = is_readable($seedFile) ? (string) file_get_contents($seedFile) : '';
+            if (trim($seed) !== '') {
+                $pdo->exec($seed);
+            }
         }
         if ((int) $pdo->query('SELECT COUNT(*) FROM admins')->fetchColumn() === 0) {
             $pdo->prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)')

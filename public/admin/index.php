@@ -173,10 +173,11 @@ require __DIR__ . '/../../app/views/header.php';
               <?= csrf_field() ?>
               <input type="hidden" name="edit_question_id" value="<?= (int) $editQuestion['id'] ?>">
               <label><span>Title <span class="opt">(optional)</span></span><input type="text" name="title" value="<?= e($editQuestion['title']) ?>"></label>
-              <label class="editor-label"><span>Post</span>
+              <div class="editor-label">
+                <label for="edit-body">Post</label>
                 <?php $editorTarget = 'edit-body'; include __DIR__ . '/../../app/views/editor-toolbar.php'; ?>
                 <textarea id="edit-body" name="body" rows="12" data-editor-field required><?= e($editQuestion['body']) ?></textarea>
-              </label>
+              </div>
               <label><span>Image URL (optional)</span><input type="url" name="image_url" value="<?= e($editQuestion['image_url'] ?? '') ?>"></label>
               <label><span>Publish date &amp; time</span>
                 <input type="datetime-local" name="publish_at" value="<?= e(utc_to_local_input($editQuestion['created_at'])) ?>">
@@ -193,10 +194,11 @@ require __DIR__ . '/../../app/views/header.php';
             <form class="admin-form" method="post" action="/admin/">
               <?= csrf_field() ?>
               <label><span>Title <span class="opt">(optional)</span></span><input type="text" name="title" placeholder="Leave blank to post without a heading"></label>
-              <label class="editor-label"><span>Post</span>
+              <div class="editor-label">
+                <label for="post-body">Post</label>
                 <?php $editorTarget = 'post-body'; include __DIR__ . '/../../app/views/editor-toolbar.php'; ?>
                 <textarea id="post-body" name="body" rows="12" data-editor-field placeholder="Write this morning's post. Your line breaks are kept exactly as you type them." required></textarea>
-              </label>
+              </div>
               <label><span>Image URL (optional)</span><input type="url" name="image_url" placeholder="https://example.com/photo.jpg"></label>
               <label><span>Publish date &amp; time <span class="opt">(optional)</span></span>
                 <input type="datetime-local" name="publish_at" value="">

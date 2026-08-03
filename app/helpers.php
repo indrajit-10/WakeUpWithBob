@@ -52,15 +52,31 @@ function safe_local_redirect(?string $referer, string $fallback = '/'): string {
         . (isset($parts['fragment']) ? '#' . $parts['fragment'] : '');
 }
 
+/** A random token, generated once per request, that whitelists the handful of inline
+ *  <script> blocks we genuinely need (currently only the Google Analytics bootstrap).
+ *  A nonce is far safer than 'unsafe-inline': it permits the exact block we tagged
+ *  and still blocks any script an attacker manages to inject, because they cannot
+ *  guess this value. Echo it as  nonce="<?= e(csp_nonce()) ?>"  on the script tag. */
+function csp_nonce(): string {
+    static $nonce = null;
+    if ($nonce === null) {
+        $nonce = base64_encode(random_bytes(16));
+    }
+    return $nonce;
+}
+
 /** Send hardening HTTP headers on every web response (no-op on CLI or once output has begun). */
 function send_security_headers(): void {
     if (PHP_SAPI === 'cli' || headers_sent()) {
         return;
     }
-    // This app ships NO inline scripts, so script-src can stay strict ('self') — a
-    // strong brake on injected JavaScript. Inline styles are limited to a static SVG
-    // and the background-image URLs, so style keeps 'unsafe-inline'. External images
-    // are allowed over https (admin post images + the 123 Greetings logo).
+    // script-src stays tight: 'self' for our own files, a per-request nonce for the
+    // one inline Google Analytics block, and googletagmanager.com for gtag.js. An
+    // injected <script> still cannot run — it has neither our origin nor the nonce.
+    // connect-src must be listed explicitly (default-src would otherwise block it)
+    // so gtag can POST measurements; wildcards cover Google's regional endpoints.
+    // Inline styles are limited to a static SVG and background-image URLs, so style
+    // keeps 'unsafe-inline'. External images are allowed over https.
     header("Content-Security-Policy: "
         . "default-src 'self'; "
         . "base-uri 'self'; "
@@ -69,7 +85,8 @@ function send_security_headers(): void {
         . "form-action 'self'; "
         . "img-src 'self' https: data:; "
         . "style-src 'self' 'unsafe-inline'; "
-        . "script-src 'self'");
+        . "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; "
+        . "script-src 'self' 'nonce-" . csp_nonce() . "' https://www.googletagmanager.com");
     header('X-Content-Type-Options: nosniff');
     header('X-Frame-Options: SAMEORIGIN');
     header('Referrer-Policy: strict-origin-when-cross-origin');

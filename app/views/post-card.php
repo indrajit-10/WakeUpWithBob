@@ -29,7 +29,7 @@ $hl = $highlightTerms ?? [];
     <button class="pill" type="button" data-scrollto="comment-form-<?= $qid ?>">
       <svg class="ico ico-sm"><use href="#i-comment"/></svg><?= (int) $q['comment_count'] ?>
     </button>
-    <button class="pill" type="button"><svg class="ico ico-sm"><use href="#i-share"/></svg>Share</button>
+    <button class="pill" type="button" style="display:none"><svg class="ico ico-sm"><use href="#i-share"/></svg>Share</button>
   </div>
 
   <?php if ($top): ?>

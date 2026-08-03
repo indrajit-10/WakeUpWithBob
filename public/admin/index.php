@@ -152,7 +152,7 @@ require __DIR__ . '/../../app/views/header.php';
           <form method="post" action="/admin/">
             <?= csrf_field() ?>
             <input type="hidden" name="logout" value="1">
-            <button class="pill" type="submit">Log out</button>
+            <button class="pill" type="submit" style="background:var(--red); color: var(--card);line-height: 1; padding-bottom: 13px;">Log out</button>
           </form>
         </div>
 

@@ -142,7 +142,7 @@ require __DIR__ . '/../app/views/header.php';
 
         <div class="actions">
           <a class="pill" href="#add-comment"><svg class="ico ico-sm"><use href="#i-comment"/></svg><?= $commentTotal ?> Comments</a>
-          <button class="pill" type="button"><svg class="ico ico-sm"><use href="#i-share"/></svg>Share</button>
+          <button class="pill" type="button" style="display:none"><svg class="ico ico-sm"><use href="#i-share"/></svg>Share</button>
         </div>
       </article>
 

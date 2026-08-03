@@ -8,7 +8,7 @@ $year = date('Y');
     <div class="foot-col foot-brand">
       <span class="lockup">
         <img class="logo" src="/assets/img/logo.svg" alt="" width="30" height="30">
-        <span class="lk-text"><b>Wake up</b> <i>with</i> <b class="ob">Bob</b></span>
+        <span class="lk-text"><b>Five Minutes</b> <i>with</i> <b class="ob">Bob</b></span>
       </span>
     </div>
 
@@ -19,7 +19,7 @@ $year = date('Y');
 
     <nav class="foot-col">
       <div class="foot-h">Help</div>
-      <a href="/faq.php">FAQ</a>
+      <a href="#">FAQ</a>
       <a href="/contact.php">Contact us</a>
     </nav>
 

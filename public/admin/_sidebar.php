@@ -12,9 +12,15 @@ $badge = static fn (int $n): string => $n > 0 ? '<span class="admin-badge">' . $
     <a class="admin-nav-link<?= $active === 'index.php' ? ' active' : '' ?>" href="/admin/">Posts</a>
     <a class="admin-nav-link<?= $active === 'stats.php' ? ' active' : '' ?>" href="/admin/stats.php">Stats</a>
     <a class="admin-nav-link<?= $active === 'searches.php' ? ' active' : '' ?>" href="/admin/searches.php">User Search Data</a>
-    <a class="admin-nav-link<?= $active === 'comments.php' ? ' active' : '' ?>" href="/admin/comments.php">Moderation <?= $badge($pendingCount) ?></a>
-    <a class="admin-nav-link<?= $active === 'questions.php' ? ' active' : '' ?>" href="/admin/questions.php">Reader questions <?= $badge($newQuestions) ?></a>
-    <a class="admin-nav-link<?= $active === 'feedback.php' ? ' active' : '' ?>" href="/admin/feedback.php">Feedback <?= $badge($newFeedback) ?></a>
+    <a class="admin-nav-link<?= $active === 'comments.php' ? ' active' : '' ?>" href="/admin/comments.php">Comments <?= $badge($pendingCount) ?></a>
+    <a class="admin-nav-link<?= $active === 'questions.php' ? ' active' : '' ?> d-none" href="/admin/questions.php">Reader questions <?= $badge($newQuestions) ?></a>
+    <a class="admin-nav-link<?= $active === 'feedback.php' ? ' active' : '' ?>" href="/admin/feedback.php">Contact us<?= $badge($newFeedback) ?></a>
     <a class="admin-nav-link<?= $active === 'settings.php' ? ' active' : '' ?>" href="/admin/settings.php">Settings</a>
   </nav>
+          <form method="post" action="/admin/" style="margin-top: 25px;margin-left: 12px;">
+            <?= csrf_field() ?>
+            <input type="hidden" name="logout" value="1">
+            <button class="pill" type="submit" style="background:var(--red); color: var(--card);line-height: 1; padding-bottom: 13px;">Log out</button>
+          </form>
+
 </aside>

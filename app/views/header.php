@@ -19,6 +19,15 @@ $showChrome = $showSearch ?? true;        // public pages get search + nav; admi
   <?php foreach (($extraJs ?? []) as $__js): ?>
     <script src="<?= e($__js) ?>" defer></script>
   <?php endforeach; ?>
+  <!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-50SCE7ZLTC"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'G-50SCE7ZLTC');
+	</script>
 </head>
 <body>
 
@@ -61,17 +70,17 @@ $showChrome = $showSearch ?? true;        // public pages get search + nav; admi
       <div class="tb-center admin-title"><?= e($pageTitle) ?></div>
     <?php endif; ?>
 
-    <div class="tb-right">
+    <div class="tb-right d-none">
       <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light or dark theme" title="Toggle light / dark">
         <svg class="ico ico-sun"><use href="#i-sun"/></svg>
         <svg class="ico ico-moon"><use href="#i-moon"/></svg>
       </button>
-      <a class="tb-lockup" href="/">
+      <!--<a class="tb-lockup" href="/">-->
         <span class="lockup">
           <img class="logo" src="/assets/img/logo.svg" alt="" width="34" height="34">
-          <span class="lk-text"><b>Wake up</b> <i>with</i> <b class="ob">Bob</b></span>
+          <span class="lk-text"><b>Five Minutes</b> <i>with</i> <b class="ob">Bob</b></span>
         </span>
-      </a>
+      <!--</a>-->
     </div>
   </div>
 </header>

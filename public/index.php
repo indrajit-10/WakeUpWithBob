@@ -134,7 +134,7 @@ require __DIR__ . '/../app/views/header.php';
         <div class="empty">
           <?= $search !== ''
               ? 'Nothing matches “' . e($search) . '”. Try different words, or a date like “5 July”.'
-              : 'No mornings yet. Bob’s first question arrives with tomorrow’s coffee.' ?>
+              : 'Bob’s first question arrives with tomorrow’s coffee.' ?>
         </div>
       <?php endif; ?>
 

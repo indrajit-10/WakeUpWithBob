@@ -64,9 +64,9 @@ a{color:inherit; text-decoration:none}
 .tb-left{display:flex; align-items:center; gap:10px; flex:none}
 .tb-right{display:flex; align-items:center; gap:10px; flex:none}
 .tb-brand{display:inline-flex; align-items:center; flex:none}
-.hamburger{display:none; align-items:center; justify-content:center; width:40px; height:40px; padding:0; border:0; border-radius:10px; background:transparent; color:var(--text); cursor:pointer; flex:none}
+.hamburger{display:none; align-items:center; justify-content:center; width:30px; height:30px; padding:0; border:0; border-radius:10px; background:transparent; color:var(--text); cursor:pointer; flex:none}
 .hamburger:hover{background:var(--elev)}
-.hamburger .ico{width:22px; height:22px}
+.hamburger .ico{width:30px; height:30px}
 /* light/dark toggle: a clear circular control that swaps a sun / moon glyph */
 .theme-toggle{display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; padding:0; border:1px solid var(--border); border-radius:50%; background:var(--pill); color:var(--meta); cursor:pointer; flex:none; transition:background .15s ease, border-color .15s ease, color .15s ease}
 .theme-toggle:hover{background:var(--pill-h); border-color:var(--blue); color:var(--blue)}
@@ -253,13 +253,13 @@ a{color:inherit; text-decoration:none}
 .widget-h{padding:12px 18px; font-size:12.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--text); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:9px}
 .widget-h .ico{color:var(--blue)}
 .widget-b{padding:14px 18px}
-.widget-b p{font-size:.86rem; line-height:1.5; color:var(--meta); margin:0 0 10px}
+.widget-b p{font-size:15px; line-height:1.5; color:#2e2e2e; margin:0 0 20px}
 .w-input,.w-textarea{width:100%; background:var(--bg); border:1px solid var(--border); border-radius:11px; padding:9px 12px; font:inherit; font-size:.88rem; color:var(--text); outline:none; margin-bottom:8px}
 .w-textarea{min-height:56px; resize:vertical}
 .w-input:focus,.w-textarea:focus{border-color:var(--blue)}
 .tiny{font-size:11.5px; color:var(--meta); margin-top:7px; display:flex; align-items:center; gap:7px}
 .tiny .dot{width:6px; height:6px; border-radius:50%; background:var(--green); flex:none}
-.btn-orange{display:inline-flex; align-items:center; justify-content:center; gap:7px; background:var(--orange-btn); color:#fff; font-weight:800; font-size:.9rem; border:0; border-radius:999px; padding:11px 18px; cursor:pointer; width:100%}
+.btn-orange{display:inline-flex; align-items:center; justify-content:center; gap:7px; background:var(--orange-btn); color:#fff; font-weight:400; font-size:17px; border:0; border-radius:999px; padding:15px 18px; cursor:pointer; width:100%; line-height: 1; text-transform: capitalize;}
 .btn-orange:hover{filter:brightness(1.06)}
 .comm-name{display:flex; align-items:center; gap:11px; font-weight:800; font-size:1.05rem; margin-bottom:12px}
 .comm-name .avatar{width:34px; height:34px}
@@ -343,7 +343,7 @@ a{color:inherit; text-decoration:none}
 .shell--question .comment-reply-list{margin-left:12px}
 @media (max-width:760px){
   .shell{grid-template-columns:minmax(0,1fr); padding:16px} .left{display:none}
-  .topbar-inner{display:flex; gap:8px; padding:0 12px} .tb-lockup{display:none}
+  .topbar-inner{display:flex; gap:12px; padding:0 12px} .tb-lockup{display:none}
   /* let the search column shrink so the hamburger + toggle always stay on-screen */
   .tb-center{width:auto; flex:1 1 auto; min-width:0} .searchwrap{width:100%; min-width:0}
   .searchwrap input{min-width:0}
@@ -406,7 +406,15 @@ a{color:inherit; text-decoration:none}
 .add-comment-bar .btn-orange{width:auto; padding:11px 24px}
 .qempty{background:var(--card); border:1px dashed var(--border); border-radius:14px; padding:26px 20px; text-align:center; color:var(--meta)}
 
-@media (max-width:760px){ .cmt-replies{margin-left:8px; padding-left:10px} }
+@media (max-width:760px){ .cmt-replies{margin-left:8px; padding-left:10px} 
+	.g123-logo.g123-lg {
+		height: 32px !important;
+	}
+	.searchwrap{
+		gap: 3px;
+		padding: 5px 10px;
+	}
+}
 
 /* ============ ADMIN: post history + pagination + edit ============ */
 .admin-card-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px}
@@ -570,7 +578,7 @@ mark{background:var(--orange-tint); color:inherit; border-radius:4px; padding:0 
 .sitefoot{max-width:none; margin:40px 0 0; padding:0; display:block; background:var(--card); border-top:1px solid var(--border)}
 .foot-inner{max-width:var(--wrap); margin:0 auto; padding:36px 20px 24px; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:28px}
 .foot-col{display:flex; flex-direction:column; gap:9px; min-width:0}
-.foot-h{font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--meta); margin-bottom:3px}
+.foot-h{font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--orange); margin-bottom:3px}
 .foot-col a{color:var(--meta); font-size:.92rem; width:fit-content}
 .foot-col a:hover{color:var(--blue)}
 .foot-brand .lockup{margin-bottom:4px}
@@ -657,7 +665,7 @@ mark{background:var(--orange-tint); color:inherit; border-radius:4px; padding:0 
 
 /* ============ 123 Greetings logo image (replaces the text wordmark) ============ */
 .g123-logo{display:inline-block; height:1.35em; width:auto; vertical-align:middle}
-.g123-logo.g123-lg{height:30px}          /* top bar */
+.g123-logo.g123-lg{height:50px}          /* top bar */
 .g123-logo.g123-md{height:26px}          /* about co-brand block */
 .tb-left{display:inline-flex; align-items:center}
 
@@ -718,3 +726,6 @@ mark{background:var(--orange-tint); color:inherit; border-radius:4px; padding:0 
 .mod-bobreply{background:var(--green-tint); border-radius:0 10px 10px 0; padding:9px 13px}
 .mod-bobreply-head{font-size:12px; display:flex; align-items:center; gap:7px; margin-bottom:3px}
 .mod-bobreply-body{font-size:.95rem; line-height:1.5; color:var(--text)}
+
+
+.d-none{display:none !important;}

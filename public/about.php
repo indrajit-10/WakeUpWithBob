@@ -80,7 +80,7 @@ require __DIR__ . '/../app/views/header.php';
       </article>
 
       <!-- the quiet numbers, as a footer strip -->
-      <div class="statstrip">
+      <div class="statstrip" style="display:none">
         <div class="stat">
           <span class="stat-num"><?= e(number_format($mornings)) ?></span>
           <span class="stat-label"><?= $mornings === 1 ? 'morning' : 'mornings' ?> so far</span>

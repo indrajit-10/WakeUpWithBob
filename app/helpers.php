@@ -637,3 +637,51 @@ function time_ago(string $datetime): string {
 function fmt_datetime(string $datetime): string {
     return date('M j, Y · g:i a', db_time($datetime));
 }
+
+/** Absolute, shareable URL for one post.
+ *  SITE_URL is the source of truth — it is what the alert emails already use.
+ *  But a blank constant must not silently yield "/question.php?id=7": that would
+ *  paste into WhatsApp as a dead link, and nobody would report it. Fall back to
+ *  the request host so the worst case is an unexpected domain, not a broken one. */
+function share_link(int $questionId): string {
+    $base = defined('SITE_URL') ? rtrim((string) SITE_URL, '/') : '';
+    if ($base === '') {
+        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+        $host  = (string) ($_SERVER['HTTP_HOST'] ?? '');
+        $base  = $host !== '' ? ($https ? 'https://' : 'http://') . $host : '';
+    }
+    return $base . '/question.php?id=' . $questionId;
+}
+
+/** The text a reader shares — title, one-line excerpt, link:
+ *
+ *      What does it mean to be human?
+ *      Some mornings the answer begins with a birthday. Some mornings with an…
+ *      https://human.123greetings.com/question.php?id=25
+ *
+ *  An untitled post uses its own opening as the first line, so the excerpt is
+ *  dropped — otherwise the same sentence would appear twice. */
+function share_text(array $q): string {
+    $lines = [];
+    $title = trim((string) ($q['title'] ?? ''));
+
+    if ($title !== '') {
+        $lines[] = $title;
+        // Plain text: drop **bold**/_italic_ markers and flatten newlines to spaces.
+        $body = trim((string) preg_replace('/\s+/u', ' ', strip_post_markup($q['body'] ?? '')));
+        if ($body !== '') {
+            if (mb_strlen($body) > 120) {
+                $cut = mb_substr($body, 0, 120);
+                $sp  = mb_strrpos($cut, ' ');            // cut on a word, never mid-word
+                if ($sp !== false && $sp > 60) { $cut = mb_substr($cut, 0, $sp); }
+                $body = rtrim($cut, " ,.;:—-") . '…';
+            }
+            $lines[] = $body;
+        }
+    } else {
+        $lines[] = post_label(null, $q['body'] ?? '', $q['post_number'] ?? null);
+    }
+
+    $lines[] = share_link((int) ($q['id'] ?? 0));
+    return implode("\n", $lines);
+}

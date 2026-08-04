@@ -12,6 +12,7 @@
  *   data-theme-toggle                       → click flips light/dark and remembers it
  *   data-navigate (on a <select>)           → changing it navigates to the chosen option's value
  *   data-confirm="Are you sure?"            → submit is cancelled unless the user confirms
+ *   data-share-copy="TEXT"                  → click copies TEXT to the clipboard
  */
 (function () {
   'use strict';
@@ -66,5 +67,69 @@
     if (nav && nav.value) {
       window.location.href = nav.value;
     }
+  });
+
+  // --- share menus -------------------------------------------------------
+  // The panel itself is opened by the data-toggle handler above; this only
+  // keeps one open at a time and closes it the ways people expect.
+  function closeShareMenus(except) {
+    var open = document.querySelectorAll('.share-menu.open');
+    for (var i = 0; i < open.length; i++) {
+      if (open[i] !== except) { open[i].classList.remove('open'); }
+    }
+  }
+
+  document.addEventListener('click', function (event) {
+    var trigger = event.target.closest('[data-toggle]');
+    var panel   = trigger ? document.getElementById(trigger.getAttribute('data-toggle')) : null;
+    if (panel && panel.classList.contains('share-menu')) {
+      closeShareMenus(panel);                       // opening one closes the others
+      return;
+    }
+    if (!event.target.closest('.share-menu')) {
+      closeShareMenus(null);                        // a click anywhere else closes them all
+    }
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') { closeShareMenus(null); }
+  });
+
+  // Copy the share text. iOS Safari only honours the write when it happens in the
+  // SAME TICK as the click — so the text is read straight off the attribute. No
+  // await, no fetch, nothing between the gesture and writeText().
+  document.addEventListener('click', function (event) {
+    var btn = event.target.closest('[data-share-copy]');
+    if (!btn) { return; }
+    var text  = btn.getAttribute('data-share-copy');
+    var label = btn.querySelector('.share-lbl');
+
+    var done = function (ok) {
+      if (!label) { return; }
+      var original = label.getAttribute('data-original') || label.textContent;
+      label.setAttribute('data-original', original);
+      label.textContent = ok ? 'Copied!' : 'Couldn’t copy';
+      window.setTimeout(function () {
+        label.textContent = original;
+        closeShareMenus(null);
+      }, 1200);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      return;
+    }
+    // Older browsers, or any non-HTTPS origin where navigator.clipboard is undefined.
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity  = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    done(ok);
   });
 })();

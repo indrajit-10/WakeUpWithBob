@@ -29,7 +29,7 @@ $hl = $highlightTerms ?? [];
     <button class="pill" type="button" data-scrollto="comment-form-<?= $qid ?>">
       <svg class="ico ico-sm"><use href="#i-comment"/></svg><?= (int) $q['comment_count'] ?>
     </button>
-    <button class="pill" type="button" style="display:none"><svg class="ico ico-sm"><use href="#i-share"/></svg>Share</button>
+    <?php include __DIR__ . '/share-menu.php'; ?>
   </div>
 
   <?php if ($top): ?>

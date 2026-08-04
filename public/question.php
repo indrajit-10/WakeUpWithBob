@@ -126,7 +126,7 @@ require __DIR__ . '/../app/views/header.php';
       <article class="post post--lead">
         <div class="post-meta">
           <span class="avatar"><img class="logo" src="/assets/img/logo.svg" alt="" width="19" height="19"></span>
-          <a class="community" href="/question.php?id=<?= $questionId ?>">Wake up with Bob</a>
+          <a class="community" href="/question.php?id=<?= $questionId ?>">Five minutes with Bob</a>
           <span>· Posted by</span> <b class="byline">Bob</b>
           <span>·</span> <span class="time"><?= e(date('F j, Y', db_time($question['created_at']))) ?></span>
         </div>

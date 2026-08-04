@@ -11,7 +11,7 @@ $hl = $highlightTerms ?? [];
 <article class="post">
   <div class="post-meta">
     <span class="avatar"><img class="logo" src="/assets/img/logo.svg" alt="" width="19" height="19"></span>
-    <a class="community" href="/question.php?id=<?= $qid ?>">Wake up with Bob</a>
+    <a class="community" href="/question.php?id=<?= $qid ?>">Five minutes with Bob</a>
     <span>·</span>
     <span class="time"><?= e(date('F j, Y', db_time($q['created_at']))) ?></span>
   </div>

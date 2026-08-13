@@ -26,7 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             sleep(1);   // small, deliberate delay to slow password guessing
             $errors[] = 'Those admin credentials were not accepted.';
         } else {
-            redirect('/admin/');
+            // Signing in lands on Stats, not the composer: the first thing you want
+            // after logging in is the state of the site, not a blank form. /admin/
+            // stays the composer, reachable from "New post" in the sidebar.
+            redirect('/admin/stats.php');
         }
     } else {
         if (!empty($_POST['edit_question_id'])) {

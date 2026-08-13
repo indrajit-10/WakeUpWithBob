@@ -9,7 +9,8 @@ $badge = static fn (int $n): string => $n > 0 ? '<span class="admin-badge">' . $
 <aside class="admin-sidebar">
   <div class="admin-sidebar-header">Admin</div>
   <nav class="admin-nav">
-    <a class="admin-nav-link<?= $active === 'index.php' ? ' active' : '' ?>" href="/admin/">Posts</a>
+    <a class="admin-nav-link<?= $active === 'index.php' ? ' active' : '' ?>" href="/admin/">New post</a>
+    <a class="admin-nav-link<?= in_array($active, ['posts.php', 'preview.php'], true) ? ' active' : '' ?>" href="/admin/posts.php">All posts</a>
     <a class="admin-nav-link<?= $active === 'stats.php' ? ' active' : '' ?>" href="/admin/stats.php">Stats</a>
     <a class="admin-nav-link<?= $active === 'searches.php' ? ' active' : '' ?>" href="/admin/searches.php">User Search Data</a>
     <a class="admin-nav-link<?= $active === 'comments.php' ? ' active' : '' ?>" href="/admin/comments.php">Comments <?= $badge($pendingCount) ?></a>

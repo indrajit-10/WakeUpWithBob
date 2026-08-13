@@ -123,7 +123,7 @@ require __DIR__ . '/../../app/views/header.php';
   <div class="admin-login">
     <div class="admin-card admin-login-card">
       <div class="admin-login-brand"><img src="/assets/img/logo.svg" alt="" width="26" height="26"> Admin sign-in</div>
-      <p>Sign in to publish and manage Wake up with Bob.</p>
+      <p>Sign in to publish and manage Five minutes with Bob.</p>
       <?php if ($errors): ?>
         <div class="admin-msg admin-error">
           <ul><?php foreach ($errors as $error): ?><li><?= e($error) ?></li><?php endforeach; ?></ul>
@@ -220,7 +220,7 @@ require __DIR__ . '/../../app/views/header.php';
                 <li>
                   <span class="post-num">#<?= (int) $q['post_number'] ?></span>
                   <div class="post-hist-main">
-                    <a class="post-hist-title" href="/question.php?id=<?= (int) $q['id'] ?>"><?= e(post_label($q['title'], $q['body'], $q['post_number'] ?? null)) ?></a>
+                    <a class="post-hist-title" href="/question.php?id=<?= (int) $q['id'] ?>" target="_blank"><?= e(post_label($q['title'], $q['body'], $q['post_number'] ?? null)) ?></a>
                     <div class="post-hist-meta">
                       <?= e(fmt_datetime($q['created_at'])) ?> · <?= (int) $q['comment_count'] ?> comments
                       <?php if (is_scheduled($q['created_at'])): ?>

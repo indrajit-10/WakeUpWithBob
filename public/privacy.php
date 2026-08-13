@@ -82,9 +82,9 @@ require __DIR__ . '/../app/views/header.php';
         <p class="post-text">Comments and messages are kept for as long as the site runs. If you would like something
           you posted removed, just ask via the <a href="/contact.php">Contact page</a> and we will take care of it.</p>
 
-        <h2>123 Greetings</h2>
-        <p class="post-text"><?= e(SITE_NAME) ?> is powered by 123 Greetings. If you follow a link from our footer to a
-          123 Greetings website, your visit there is covered by that site’s own privacy policy, not this one.</p>
+        <h2>123Greetings</h2>
+        <p class="post-text"><?= e(SITE_NAME) ?> is powered by 123Greetings. If you follow a link from our footer to a
+          123Greetings website, your visit there is covered by that site’s own privacy policy, not this one.</p>
 
         <h2>Changes</h2>
         <p class="post-text">If we change how we handle your information, we will update this page and the date above.</p>

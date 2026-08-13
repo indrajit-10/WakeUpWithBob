@@ -51,17 +51,17 @@ require __DIR__ . '/../app/views/header.php';
       </div>
 
       <article class="post">
-        <p class="post-text">Have a question, a worry, or something you would like taken down? Send Bob a note below and a real person will read it. If you would rather email, reach us at
-          <a class="contact-mail" href="mailto:<?= e(CONTACT_EMAIL) ?>"><?= e(CONTACT_EMAIL) ?></a>.</p>
-        <p class="muted contact-hint">Want to suggest a question for the morning feed instead? Use <b>Ask Bob a question</b> over in the sidebar.</p>
+        <p class="post-text">If you would like to communicate with Bob, he can be reached at:
+          <a class="contact-mail" href="mailto:<?= e(CONTACT_EMAIL) ?>"><?= e(CONTACT_EMAIL) ?></a>.</p><br>
+        <p class="muted contact-hint d-none">Want to suggest a question for the morning feed instead? Use <b>Ask Bob a question</b> over in the sidebar.</p>
 
         <form class="contact-form" method="post" action="/contact.php">
           <?= csrf_field() ?>
           <div class="contact-row">
-            <label><span>Your name (optional)</span>
+            <label><span>Your name <span class="opt">(optional)</span></span>
               <input type="text" name="name" value="<?= e(remembered_name()) ?>" maxlength="80">
             </label>
-            <label><span>Email (optional, if you’d like a reply)</span>
+            <label><span>Email <span class="opt">(optional, if you’d like a reply)</span></span>
               <input type="email" name="email" maxlength="120">
             </label>
           </div>

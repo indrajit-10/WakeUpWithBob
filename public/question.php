@@ -117,7 +117,7 @@ require __DIR__ . '/../app/views/header.php';
     </nav>
 
     <main class="center">
-      <a class="backlink" href="/">
+      <a class="backlink d-none" href="/">
         <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7v-4h6v-6h-6z" fill="currentColor"/></svg>
         All mornings
       </a>
@@ -170,7 +170,7 @@ require __DIR__ . '/../app/views/header.php';
           <input class="field" type="text" name="author_name" placeholder="Your name (optional)" value="<?= e(remembered_name()) ?>">
           <textarea class="field" name="comment_body" rows="4" placeholder="Share your morning…" required></textarea>
           <div class="add-comment-bar">
-            <span class="tiny"><span class="dot"></span>Held for Bob to approve before it appears.</span>
+            <span class="tiny d-none"><span class="dot"></span>Under review. It will appear shortly.</span>
             <button class="btn-orange" type="submit">Post comment</button>
           </div>
         </form>

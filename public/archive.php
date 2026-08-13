@@ -65,7 +65,7 @@ require __DIR__ . '/../app/views/header.php';
     <main class="center">
       <div class="feedhead">
         <b>Archive</b>
-        <span class="muted"><?= (int) $totalPosts ?> morning<?= $totalPosts === 1 ? '' : 's' ?> so far</span>
+        <span class="muted"><?= (int) $totalPosts ?> Edition<?= $totalPosts === 1 ? '' : 's' ?></span>
       </div>
 
       <?php if (!$months): ?>

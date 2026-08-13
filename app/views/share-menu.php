@@ -24,7 +24,7 @@ $shareText = share_text($q);
     </button>
     <a class="share-opt" href="https://wa.me/?text=<?= rawurlencode($shareText) ?>"
        target="_blank" rel="noopener noreferrer">
-      <svg class="ico ico-sm"><use href="#i-whatsapp"/></svg>WhatsApp
+      <svg class="ico ico-sm" style="color:#25D366;"><use href="#i-whatsapp"/></svg>WhatsApp
     </a>
   </div>
 </span>

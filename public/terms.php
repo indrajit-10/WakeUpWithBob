@@ -25,11 +25,11 @@ require __DIR__ . '/../app/views/header.php';
       <article class="post legal">
         <p class="legal-updated">Last updated: <?= e($updated) ?></p>
 
-        <p class="post-text">These are the house rules for Wake up with Bob. They are meant to be readable, not
+        <p class="post-text">These are the house rules for Five Minutes with Bob. They are meant to be readable, not
           scary. By using the site, you agree to them.</p>
 
         <h2>What this is</h2>
-        <p class="post-text">Wake up with Bob is a free community where Bob posts one question each morning and
+        <p class="post-text">Five Minutes with Bob is a free community where Bob posts one question each morning and
           readers reply and share. There are no accounts and nothing to buy.</p>
 
         <h2>Your posts</h2>
@@ -50,8 +50,8 @@ require __DIR__ . '/../app/views/header.php';
           and it may occasionally be unavailable or change. To the extent the law allows, we are not liable for any
           loss arising from your use of it.</p>
 
-        <h2>123 Greetings</h2>
-        <p class="post-text">Wake up with Bob is powered by 123 Greetings. Links to 123 Greetings websites in our
+        <h2>123Greetings</h2>
+        <p class="post-text">Five Minutes with Bob is powered by 123Greetings. Links to 123Greetings websites in our
           footer lead to separate sites governed by their own terms.</p>
 
         <h2>Changes</h2>

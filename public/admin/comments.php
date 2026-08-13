@@ -175,7 +175,7 @@ $filterChip = static function (string $key, string $label, int $count, string $c
       <?php foreach ($groups as $g): $count = count($g['items']); ?>
         <section class="admin-card mod-post">
           <div class="mod-post-head">
-            <a class="mod-post-title" href="/question.php?id=<?= (int) $g['id'] ?>">
+            <a class="mod-post-title" href="/question.php?id=<?= (int) $g['id'] ?>" target="_blank">
               <span class="post-num">#<?= (int) $g['number'] ?></span> <?= e(post_label($g['title'], $g['body'] ?? '', $g['number'])) ?>
             </a>
             <?php if ($tab === 'incoming'): ?>

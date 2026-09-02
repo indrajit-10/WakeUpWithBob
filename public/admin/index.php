@@ -26,7 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             sleep(1);   // small, deliberate delay to slow password guessing
             $errors[] = 'Those admin credentials were not accepted.';
         } else {
-            redirect('/admin/');
+            // Signing in lands on Stats: the first thing you want after logging in
+            // is the state of the site, not a blank composer.
+            redirect('/admin/stats.php');
         }
     } else {
         if (!empty($_POST['delete_question_id'])) {

@@ -81,7 +81,8 @@ $bobByParent = [];
 if ($tab === 'incoming') {
     $rows = $pdo->query(
         "SELECT c.*, q.title AS question_title, q.body AS question_body, q.post_number,
-                p.author_name AS parent_author, p.body AS parent_body, p.is_admin_reply AS parent_is_admin
+                p.author_name AS parent_author, p.body AS parent_body, p.is_admin_reply AS parent_is_admin,
+                (SELECT COUNT(*) FROM comments r WHERE r.parent_id = c.id) AS child_count
          FROM comments c
          JOIN questions q ON c.question_id = q.id
          LEFT JOIN comments p ON c.parent_id = p.id
@@ -224,7 +225,21 @@ $filterChip = static function (string $key, string $label, int $count, string $c
                       <input type="hidden" name="approve_comment_id" value="<?= $cid ?>">
                       <button class="mod-btn mod-btn--approve" type="submit">✓ Approve</button>
                     </form>
-                    <form method="post" action="/admin/comments.php">
+                    <?php
+                      /* Rejecting is a hard DELETE with no undo, and the Reject button sits
+                         right beside Approve — so it asks first. app.js's data-confirm
+                         handler cancels the submit unless the dialog is accepted.
+                         parent_id is ON DELETE CASCADE, so rejecting a comment that has
+                         replies takes them too, including ones already published. The
+                         message says so rather than letting that happen quietly. */
+                      $whoC   = $c['author_name'] ?: 'this reader';
+                      $kids   = (int) ($c['child_count'] ?? 0);
+                      $confirm = $kids > 0
+                        ? "Are you sure? {$whoC}'s comment and " . $kids . ' repl' . ($kids === 1 ? 'y' : 'ies')
+                          . ' underneath it will be deleted permanently. This cannot be undone.'
+                        : "Are you sure? {$whoC}'s comment will be deleted permanently. This cannot be undone.";
+                    ?>
+                    <form method="post" action="/admin/comments.php" data-confirm="<?= e($confirm) ?>">
                       <?= csrf_field() ?>
                       <input type="hidden" name="tab" value="incoming">
                       <input type="hidden" name="reject_comment_id" value="<?= $cid ?>">

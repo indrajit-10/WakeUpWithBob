@@ -146,8 +146,9 @@ require __DIR__ . '/../app/views/header.php';
         </div>
       </article>
 
-      <!-- the thread -->
-      <section class="thread">
+      <!-- the thread. id="thread" is the anchor the feed's "View all N comments"
+           link jumps to, so a reader lands on the conversation, not the top. -->
+      <section class="thread" id="thread">
         <div class="thread-head">
           <h2><?= $commentTotal ?> Comment<?= $commentTotal === 1 ? '' : 's' ?></h2>
         </div>

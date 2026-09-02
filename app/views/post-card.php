@@ -41,7 +41,9 @@ $hl = $highlightTerms ?? [];
           <span><svg class="ico"><use href="#i-comment"/></svg> <?= (int) $top['reply_count'] ?> replies</span>
         </div>
       </div>
-      <a class="tc-more" href="/question.php?id=<?= $qid ?>">View all <?= (int) $q['comment_count'] ?> comments &rarr;</a>
+      <?php /* #thread lands the reader on the conversation rather than the top of the
+               page — they clicked to read comments, so open on the comments. */ ?>
+      <a class="tc-more" href="/question.php?id=<?= $qid ?>#thread">View all <?= (int) $q['comment_count'] ?> comments &rarr;</a>
     </div>
   <?php else: ?>
     <div class="top-comment">

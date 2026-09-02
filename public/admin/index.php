@@ -105,8 +105,12 @@ if (admin_logged_in()) {
     $totalPages = max(1, (int) ceil($totalPosts / $perPage));
     $page = min($page, $totalPages);
     $offset = ($page - 1) * $perPage;
+    // all_comment_count is the REAL number the delete would take with it: comment_count
+    // only tracks approved ones, but questions.id is ON DELETE CASCADE, so pending
+    // comments go too. The delete confirmation needs the true figure.
     $stmt = $pdo->prepare(
-        'SELECT id, post_number, title, body, created_at, comment_count
+        'SELECT id, post_number, title, body, created_at, comment_count,
+                (SELECT COUNT(*) FROM comments c WHERE c.question_id = questions.id) AS all_comment_count
          FROM questions ORDER BY COALESCE(post_number, id) DESC, id DESC LIMIT ? OFFSET ?'
     );
     $stmt->bindValue(1, $perPage, PDO::PARAM_INT);
@@ -232,7 +236,20 @@ require __DIR__ . '/../../app/views/header.php';
                   </div>
                   <div class="post-hist-actions">
                     <a class="pill" href="/admin/?edit=<?= (int) $q['id'] ?>#compose">Edit</a>
-                    <form method="post" action="/admin/" data-confirm="Delete post #<?= (int) $q['post_number'] ?>?">
+                    <?php
+                      /* Deleting a post is a hard DELETE with no undo, and questions.id is
+                         ON DELETE CASCADE, so every comment on it goes too -- approved and
+                         pending alike. "Delete post #55?" hid that; the message now names
+                         the post and says how much goes with it. */
+                      $delLabel = post_label($q['title'], $q['body'], $q['post_number'] ?? null);
+                      $delKids  = (int) ($q['all_comment_count'] ?? 0);
+                      $delMsg   = 'Are you sure? Post #' . (int) $q['post_number'] . ' "' . $delLabel . '"'
+                        . ($delKids > 0
+                            ? ($delKids === 1 ? ' and the 1 comment on it' : ' and all ' . $delKids . ' comments on it')
+                            : '')
+                        . ' will be deleted permanently. This cannot be undone.';
+                    ?>
+                    <form method="post" action="/admin/" data-confirm="<?= e($delMsg) ?>">
                       <?= csrf_field() ?>
                       <input type="hidden" name="delete_question_id" value="<?= (int) $q['id'] ?>">
                       <button class="admin-delete" type="submit">Delete</button>

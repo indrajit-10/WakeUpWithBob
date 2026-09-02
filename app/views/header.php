@@ -28,6 +28,7 @@ $showChrome = $showSearch ?? true;        // public pages get search + nav; admi
 
 	  gtag('config', 'G-50SCE7ZLTC');
 	</script>
+	<meta name="google-site-verification" content="wsf3_b5jSHSkJDsqCbtEyY_YWnQ3ze2lxpyfpP5fmyA" />
 </head>
 <body>
 

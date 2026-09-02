@@ -79,7 +79,7 @@ function render_comment_card(array $comment, array $repliesByParent, int $depth 
     <div class="cmt<?= $isBob ? ' cmt--bob' : '' ?><?= $isPreview ? ' cmt--pending' : '' ?>" id="comment-<?= $cid ?>">
       <div class="cmt-head">
         <span class="cmt-author"><?= e($comment['author_name'] ?: ($isBob ? 'Bob' : 'A reader')) ?></span>
-        <?php if ($isBob): ?><span class="tag-bob">Bob</span><?php endif; ?>
+        <?php if ($isBob): ?><span class="tag-bob">Author</span><?php endif; ?>
         <span class="cmt-time">· <?= $isPreview ? 'just now' : e(time_ago($comment['created_at'])) ?></span>
       </div>
       <div class="cmt-body"><?= e($comment['body']) ?></div>

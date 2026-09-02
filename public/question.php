@@ -1,9 +1,6 @@
 <?php
-// require_once, not require: /admin/preview.php loads app/admin.php (which pulls these
-// in) and then requires this file to render the real page. A plain require would try to
-// declare e() a second time and fatal.
-require_once __DIR__ . '/../app/helpers.php';
-require_once __DIR__ . '/../app/db.php';
+require __DIR__ . '/../app/helpers.php';
+require __DIR__ . '/../app/db.php';
 
 ensure_session(); // start the session before any output so csrf_field() can set its cookie
 
@@ -15,14 +12,7 @@ if ($questionId <= 0) {
 
 // A scheduled post (publish date still in the future) must not be readable by URL —
 // otherwise a guessed or shared id would leak it before its morning.
-//
-// $ADMIN_PREVIEW lifts that gate for ONE caller only: /admin/preview.php, which checks
-// the admin session (and the idle timeout) before requiring this file. It is a local
-// variable in that file's scope, not request input — ?ADMIN_PREVIEW=1 cannot set it,
-// since register_globals died in PHP 5.4 and nothing here calls extract(). A direct hit
-// on /question.php?id=N leaves it unset, so the public gate below still applies.
-$gate = !empty($ADMIN_PREVIEW) ? '' : ' AND ' . published_sql();
-$stmt = $pdo->prepare('SELECT * FROM questions WHERE id = ?' . $gate . ' LIMIT 1');
+$stmt = $pdo->prepare('SELECT * FROM questions WHERE id = ? AND ' . published_sql() . ' LIMIT 1');
 $stmt->execute([$questionId]);
 $question = $stmt->fetch();
 if (!$question) {
@@ -127,17 +117,6 @@ require __DIR__ . '/../app/views/header.php';
     </nav>
 
     <main class="center">
-      <?php if (!empty($ADMIN_PREVIEW)): ?>
-        <div class="preview-bar" role="status">
-          <span class="preview-tag">Preview</span>
-          <span class="preview-note"><?= is_scheduled($question['created_at'])
-            ? 'Scheduled for ' . e(fmt_datetime($question['created_at'])) . ' — not public yet.'
-            : 'This post is already live on the site.' ?></span>
-          <a class="preview-back" href="/admin/posts.php">Back to all posts</a>
-          <a class="preview-back" href="/admin/?edit=<?= $questionId ?>">Edit</a>
-        </div>
-      <?php endif; ?>
-
       <a class="backlink d-none" href="/">
         <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7v-4h6v-6h-6z" fill="currentColor"/></svg>
         All mornings

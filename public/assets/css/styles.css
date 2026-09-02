@@ -454,21 +454,6 @@ a{color:inherit; text-decoration:none}
 .opt{font-weight:400; color:var(--meta); font-size:.85em}
 /* .tiny is display:flex, which would turn each <b> into a flex item — force normal text flow */
 .pub-hint{display:block; margin:-4px 0 4px; line-height:1.55; font-size:11.5px; color:var(--meta)}
-/* --- admin preview bar --------------------------------------------------
-   Shown at the top of /admin/preview.php so a scheduled post is never mistaken
-   for a live one. Theme tokens only, so dark mode needs no extra rules. */
-.preview-bar{display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;
-  background:var(--elev); border:1px solid var(--border); border-radius:12px; padding:11px 14px;
-  font-size:.9rem; color:var(--text)}
-.preview-tag{background:var(--orange); color:#fff; font-size:11px; font-weight:800;
-  letter-spacing:.05em; text-transform:uppercase; padding:3px 9px; border-radius:999px}
-/* the note takes the slack, so both links stay together on the right. Putting
-   margin-left:auto on .preview-back instead gives EVERY link the free space and
-   pushes them to opposite ends of a wrapped second row. */
-.preview-note{color:var(--meta); font-weight:600; margin-right:auto}
-.preview-back{font-weight:700; color:var(--blue); text-decoration:none; white-space:nowrap}
-.preview-back:hover{text-decoration:underline}
-
 .badge-sched{display:inline-block; margin-left:6px; background:var(--orange-tint,#fff1e6); color:var(--orange);
   font-size:10px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; padding:2px 8px; border-radius:999px}
 

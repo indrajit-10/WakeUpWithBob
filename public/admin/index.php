@@ -26,13 +26,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             sleep(1);   // small, deliberate delay to slow password guessing
             $errors[] = 'Those admin credentials were not accepted.';
         } else {
-            // Signing in lands on Stats, not the composer: the first thing you want
-            // after logging in is the state of the site, not a blank form. /admin/
-            // stays the composer, reachable from "New post" in the sidebar.
-            redirect('/admin/stats.php');
+            redirect('/admin/');
         }
     } else {
-        if (!empty($_POST['edit_question_id'])) {
+        if (!empty($_POST['delete_question_id'])) {
+            delete_question(post_int('delete_question_id'));
+            redirect('/admin/?deleted=1');
+        } elseif (!empty($_POST['edit_question_id'])) {
             $id       = post_int('edit_question_id');
             $title    = clip($_POST['title'] ?? '', 200);
             $body     = clip($_POST['body'] ?? '', 8000);
@@ -55,13 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $publishAt = null;   // unchanged — leave created_at exactly as it is
                 }
                 update_question($id, $title, $body, $imageUrl !== '' ? $imageUrl : null, $publishAt);
-                // "Save and preview" goes straight to the rendered post; plain "Save
-                // changes" returns to the list the Edit link was clicked from — where a
-                // date edit's real effect is visible, since update_question() renumbers
-                // every post by date and can move this one.
-                redirect(!empty($_POST['save_preview'])
-                    ? '/admin/preview.php?id=' . $id
-                    : '/admin/posts.php?updated=1');
+                redirect('/admin/?updated=1');
             }
         } else {
             $title    = clip($_POST['title'] ?? '', 200);
@@ -74,11 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'That publish date could not be read — please pick it again.';
             } else {
                 $newId = create_question($title, $body, $imageUrl !== '' ? $imageUrl : null, $publishAt);
-                if (!empty($_POST['save_preview'])) {
-                    // The preview banner already says whether it is scheduled or live,
-                    // so no ?created= notice is needed on that route.
-                    redirect('/admin/preview.php?id=' . $newId);
-                }
                 // Tell Bob where it actually went: scheduled, straight to the archive
                 // (backdated past the 7-day home window), or live on the feed.
                 $where = is_scheduled($publishAt) ? 'scheduled'
@@ -94,13 +83,34 @@ if (admin_logged_in() && !$editQuestion && !empty($_GET['edit'])) {
     $editQuestion = get_question((int) $_GET['edit']);
 }
 
-// success messages after a redirect (Post/Redirect/Get).
-// ?updated= and ?deleted= belong to /admin/posts.php now — this page only reports
-// what happened to a post it just created.
+// success messages after a redirect (Post/Redirect/Get)
 if (!$errors) {
     if (($_GET['created'] ?? '') === 'scheduled') $notice = 'Saved — it will publish by itself at the date and time you set.';
     elseif (($_GET['created'] ?? '') === 'archived') $notice = 'Posted and filed straight into the archive — it is older than the 7-day home feed.';
     elseif (!empty($_GET['created'])) $notice = 'Your new morning post is live on the feed.';
+    elseif (!empty($_GET['updated'])) $notice = 'Your changes were saved.';
+    elseif (!empty($_GET['deleted'])) $notice = 'The post was deleted from the feed.';
+}
+
+// paginated history of ALL posts (10 per page) — only when logged in
+$perPage = 10;
+$page = max(1, (int) ($_GET['page'] ?? 1));
+$totalPosts = 0;
+$totalPages = 1;
+$questions = [];
+if (admin_logged_in()) {
+    $totalPosts = (int) $pdo->query('SELECT COUNT(*) FROM questions')->fetchColumn();
+    $totalPages = max(1, (int) ceil($totalPosts / $perPage));
+    $page = min($page, $totalPages);
+    $offset = ($page - 1) * $perPage;
+    $stmt = $pdo->prepare(
+        'SELECT id, post_number, title, body, created_at, comment_count
+         FROM questions ORDER BY COALESCE(post_number, id) DESC, id DESC LIMIT ? OFFSET ?'
+    );
+    $stmt->bindValue(1, $perPage, PDO::PARAM_INT);
+    $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    $questions = $stmt->fetchAll();
 }
 
 $extraJs = ['/assets/js/editor.js'];   // composer toolbar (bold / italic / underline + emoji)
@@ -136,10 +146,8 @@ require __DIR__ . '/../../app/views/header.php';
       <main class="admin-main">
         <div class="admin-header">
           <div>
-            <h1><?= $editQuestion ? 'Edit post' : 'New post' ?></h1>
-            <p class="muted"><?= $editQuestion
-              ? 'Change the wording, the image or the publish date.'
-              : 'Write a morning post. Publish it now, backdate it, or schedule it.' ?></p>
+            <h1>Admin dashboard</h1>
+            <p class="muted">Publish, edit and review every morning post.</p>
           </div>
           <form method="post" action="/admin/">
             <?= csrf_field() ?>
@@ -177,8 +185,7 @@ require __DIR__ . '/../../app/views/header.php';
               <p class="muted tiny pub-hint">A past date files it straight into the archive; a future date holds it back until then. Times are <?= e(defined('APP_TIMEZONE') ? APP_TIMEZONE : 'UTC') ?>.</p>
               <div class="admin-form-actions">
                 <button class="btn-orange" type="submit">Save changes</button>
-                <button class="pill" type="submit" name="save_preview" value="1">Save and preview</button>
-                <a class="pill" href="/admin/posts.php">Cancel</a>
+                <a class="pill" href="/admin/">Cancel</a>
               </div>
             </form>
           <?php else: ?>
@@ -197,11 +204,51 @@ require __DIR__ . '/../../app/views/header.php';
                 <input type="datetime-local" name="publish_at" value="">
               </label>
               <p class="muted tiny pub-hint">Leave blank to publish now. A <b>past</b> date backdates it into the archive; a <b>future</b> date schedules it — it appears by itself, no cron needed. Times are <?= e(defined('APP_TIMEZONE') ? APP_TIMEZONE : 'UTC') ?>.</p>
-              <div class="admin-form-actions">
-                <button class="btn-orange" type="submit">Publish to feed</button>
-                <button class="pill" type="submit" name="save_preview" value="1">Save and preview</button>
-              </div>
+              <button class="btn-orange" type="submit">Publish to feed</button>
             </form>
+          <?php endif; ?>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-head">
+            <h2>All posts</h2>
+            <span class="muted"><?= (int) $totalPosts ?> total · newest first</span>
+          </div>
+          <?php if ($questions): ?>
+            <ul class="post-history">
+              <?php foreach ($questions as $q): ?>
+                <li>
+                  <span class="post-num">#<?= (int) $q['post_number'] ?></span>
+                  <div class="post-hist-main">
+                    <a class="post-hist-title" href="/question.php?id=<?= (int) $q['id'] ?>" target="_blank"><?= e(post_label($q['title'], $q['body'], $q['post_number'] ?? null)) ?></a>
+                    <div class="post-hist-meta">
+                      <?= e(fmt_datetime($q['created_at'])) ?> · <?= (int) $q['comment_count'] ?> comments
+                      <?php if (is_scheduled($q['created_at'])): ?>
+                        <span class="badge-sched">Scheduled</span>
+                      <?php endif; ?>
+                    </div>
+                  </div>
+                  <div class="post-hist-actions">
+                    <a class="pill" href="/admin/?edit=<?= (int) $q['id'] ?>#compose">Edit</a>
+                    <form method="post" action="/admin/" data-confirm="Delete post #<?= (int) $q['post_number'] ?>?">
+                      <?= csrf_field() ?>
+                      <input type="hidden" name="delete_question_id" value="<?= (int) $q['id'] ?>">
+                      <button class="admin-delete" type="submit">Delete</button>
+                    </form>
+                  </div>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+
+            <?php if ($totalPages > 1): ?>
+              <nav class="pagination">
+                <a class="page-link<?= $page <= 1 ? ' disabled' : '' ?>" href="/admin/?page=<?= max(1, $page - 1) ?>">← Prev</a>
+                <span class="page-info">Page <?= (int) $page ?> of <?= (int) $totalPages ?></span>
+                <a class="page-link<?= $page >= $totalPages ? ' disabled' : '' ?>" href="/admin/?page=<?= min($totalPages, $page + 1) ?>">Next →</a>
+              </nav>
+            <?php endif; ?>
+          <?php else: ?>
+            <p class="muted">No posts yet.</p>
           <?php endif; ?>
         </div>
 

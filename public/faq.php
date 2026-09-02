@@ -44,7 +44,7 @@ $faqs = [
     ],
     [
         'q' => 'How is my information used?',
-        'a' => 'To run the site — showing your comment once approved, remembering the name you last used on this device, and letting Bob reply to a question or note you sent in. We also use Google Analytics to count visits and see which mornings get read; that is only ever looked at in aggregate, never tied to your comments. We do not sell your information and we do not run advertising. The full details, including how to opt out of the analytics, are on the Privacy page.',
+        'a' => 'Only to run the site — showing your comment once approved, remembering the name you last used on this device, and letting Bob reply to a question or note you sent in. We do not sell it or use third-party ad trackers. The full details are on the Privacy page.',
     ],
 ];
 

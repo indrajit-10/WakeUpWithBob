@@ -9,4 +9,7 @@ Disallow: /*?sort=
 # Nothing to index behind the sign-in.
 Disallow: /admin/
 
-Sitemap: https://human.123greetings.com/sitemap.xml
+# sitemap.php, not sitemap.xml: the .htaccess rewrite is inert on this server
+# (AllowOverride is off), so /sitemap.xml 404s. If AllowOverride is ever turned
+# on, both addresses work and this line can go back to the .xml form.
+Sitemap: https://human.123greetings.com/sitemap.php

@@ -1,0 +1,12 @@
+# Five Minutes with Bob
+User-agent: *
+
+# Search result pages are thin, endless and near-duplicate. Keeping crawlers out
+# of them spends the crawl budget on the mornings themselves.
+Disallow: /*?q=
+Disallow: /*?sort=
+
+# Nothing to index behind the sign-in.
+Disallow: /admin/
+
+Sitemap: https://human.123greetings.com/sitemap.xml

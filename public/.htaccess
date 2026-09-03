@@ -1,0 +1,8 @@
+# Serve the generated sitemap at the conventional /sitemap.xml address.
+# The IfModule guard matters: RewriteEngine On without mod_rewrite is a 500.
+# If AllowOverride is off on this vhost the whole file is ignored — the sitemap
+# is then still reachable at /sitemap.php, which Search Console accepts directly.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^sitemap\.xml$ sitemap.php [L]
+</IfModule>

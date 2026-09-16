@@ -163,6 +163,71 @@ function approve_comment(int $commentId): void {
     }
 }
 
+/** Put an approved comment back in the queue — the undo for a mistaken approval.
+ *  NOT a delete: approved goes to 0, the comment leaves the public page and
+ *  reappears under Incoming, and nothing is lost. reject_comment() was the only
+ *  previous way back and it DELETES, which is a bad price for a misclick.
+ *
+ *  This reverses exactly the three writes approve_comment() makes. MAX(0, …)
+ *  because a counter that has already drifted must never be driven negative —
+ *  comment_count feeds the number on every feed card.
+ *
+ *  Note: un-approving a PARENT leaves its approved replies visible but un-nested,
+ *  because question.php treats a reply whose parent is unapproved as top-level. */
+function unapprove_comment(int $commentId): void {
+    global $pdo;
+
+    $stmt = $pdo->prepare('SELECT question_id, parent_id, approved FROM comments WHERE id = ? LIMIT 1');
+    $stmt->execute([$commentId]);
+    $comment = $stmt->fetch();
+    if (!$comment || (int) $comment['approved'] === 0) {
+        return;                     // already pending — idempotent, no double decrement
+    }
+
+    $pdo->prepare('UPDATE comments SET approved = 0 WHERE id = ?')->execute([$commentId]);
+    $pdo->prepare('UPDATE questions SET comment_count = MAX(0, comment_count - 1) WHERE id = ?')
+        ->execute([$comment['question_id']]);
+
+    if ($comment['parent_id']) {
+        $pdo->prepare('UPDATE comments SET reply_count = MAX(0, reply_count - 1) WHERE id = ?')
+            ->execute([$comment['parent_id']]);
+    }
+}
+
+/** Edit the text of one of Bob's own replies.
+ *  The  is_admin_reply = 1  in the WHERE clause is the security guard, not a
+ *  convenience: the id arrives from a form, so without it a crafted request
+ *  could rewrite any reader's comment through this endpoint. */
+function update_admin_reply(int $commentId, string $body): void {
+    global $pdo;
+    $pdo->prepare('UPDATE comments SET body = ? WHERE id = ? AND is_admin_reply = 1')
+        ->execute([$body, $commentId]);
+}
+
+/** Delete one of Bob's replies, reversing what reply_to_comment() added: the
+ *  parent's reply_count and the question's comment_count. Same is_admin_reply
+ *  guard, checked before the delete so a reader's comment can never be removed
+ *  through this path. */
+function delete_admin_reply(int $commentId): void {
+    global $pdo;
+
+    $stmt = $pdo->prepare('SELECT question_id, parent_id FROM comments WHERE id = ? AND is_admin_reply = 1 LIMIT 1');
+    $stmt->execute([$commentId]);
+    $reply = $stmt->fetch();
+    if (!$reply) {
+        return;                     // not Bob's reply (or already gone) — refuse
+    }
+
+    $pdo->prepare('DELETE FROM comments WHERE id = ? AND is_admin_reply = 1')->execute([$commentId]);
+    $pdo->prepare('UPDATE questions SET comment_count = MAX(0, comment_count - 1) WHERE id = ?')
+        ->execute([$reply['question_id']]);
+
+    if ($reply['parent_id']) {
+        $pdo->prepare('UPDATE comments SET reply_count = MAX(0, reply_count - 1) WHERE id = ?')
+            ->execute([$reply['parent_id']]);
+    }
+}
+
 /** Approve every pending comment on one question at once ("Approve all on this post"). */
 function approve_all_for_question(int $questionId): int {
     global $pdo;

@@ -51,7 +51,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         approve_all_for_question(post_int('approve_all_question_id'));
         redirect($back);
     }
+    // Undo a mistaken approval: back to the Incoming queue, not deleted.
+    if (!empty($_POST['unapprove_comment_id'])) {
+        unapprove_comment(post_int('unapprove_comment_id'));
+        redirect($back);
+    }
+    if (!empty($_POST['delete_reply_id'])) {
+        delete_admin_reply(post_int('delete_reply_id'));
+        redirect($back);
+    }
     $replyBody = clip($_POST['reply_body'] ?? '', 5000);   // clip() safely handles non-string (array) input
+    // Edit before post: an empty body would otherwise blank a published reply.
+    if (!empty($_POST['edit_reply_id']) && $replyBody !== '') {
+        update_admin_reply(post_int('edit_reply_id'), $replyBody);
+        redirect($back);
+    }
     if (!empty($_POST['reply_to_comment_id']) && $replyBody !== '') {
         reply_to_comment(post_int('reply_to_comment_id'), $replyBody);
         redirect($back);
@@ -249,10 +263,35 @@ $filterChip = static function (string $key, string $label, int $count, string $c
                 <?php else: ?>
                   <?php if ($replied): ?>
                     <div class="mod-thread">
-                      <?php foreach ($bobByParent[$cid] as $r): ?>
+                      <?php foreach ($bobByParent[$cid] as $r): $rid = (int) $r['id']; ?>
                         <div class="mod-bobreply">
-                          <div class="mod-bobreply-head"><span class="tag-bob">Bob</span> <span class="muted">· <?= e(time_ago($r['created_at'])) ?></span></div>
+                          <div class="mod-bobreply-head">
+                            <span class="tag-bob">Bob</span> <span class="muted">· <?= e(time_ago($r['created_at'])) ?></span>
+                            <?php /* Bob's own replies were display-only: a typo in a published
+                                     reply could only be removed by rejecting the reader's
+                                     comment, which deleted theirs too. */ ?>
+                            <span class="bobreply-tools">
+                              <button class="bobreply-btn" type="button"
+                                      data-toggle="editreply-<?= $rid ?>" data-toggle-class="open">Edit</button>
+                              <form method="post" action="/admin/comments.php"
+                                    data-confirm="Delete this reply from Bob? It will be removed from the public thread permanently. This cannot be undone.">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="tab" value="all">
+                                <input type="hidden" name="filter" value="<?= e($filter) ?>">
+                                <input type="hidden" name="delete_reply_id" value="<?= $rid ?>">
+                                <button class="bobreply-btn bobreply-btn--del" type="submit">Delete</button>
+                              </form>
+                            </span>
+                          </div>
                           <div class="mod-bobreply-body"><?= e($r['body']) ?></div>
+                          <form id="editreply-<?= $rid ?>" class="mod-reply bobreply-edit" method="post" action="/admin/comments.php">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="tab" value="all">
+                            <input type="hidden" name="filter" value="<?= e($filter) ?>">
+                            <input type="hidden" name="edit_reply_id" value="<?= $rid ?>">
+                            <textarea name="reply_body" rows="3" required><?= e($r['body']) ?></textarea>
+                            <button class="btn-orange" type="submit">Save reply</button>
+                          </form>
                         </div>
                       <?php endforeach; ?>
                     </div>
@@ -262,6 +301,18 @@ $filterChip = static function (string $key, string $label, int $count, string $c
                             data-toggle="modreply-<?= $cid ?>" data-toggle-class="open">
                       <?= $replied ? 'Reply again' : 'Reply as Bob' ?>
                     </button>
+                    <?php /* The undo for a mistaken approval. Deliberately has NO confirm
+                             dialog: it is reversible — the comment returns to Incoming
+                             rather than being deleted — and putting a prompt on a safe
+                             action teaches you to click through the ones that matter. */ ?>
+                    <form method="post" action="/admin/comments.php">
+                      <?= csrf_field() ?>
+                      <input type="hidden" name="tab" value="all">
+                      <input type="hidden" name="filter" value="<?= e($filter) ?>">
+                      <input type="hidden" name="unapprove_comment_id" value="<?= $cid ?>">
+                      <button class="mod-btn mod-btn--undo" type="submit"
+                              title="Send this back to Incoming — it leaves the public page but is not deleted">↩ Undo approval</button>
+                    </form>
                   </div>
                   <form id="modreply-<?= $cid ?>" class="mod-reply<?= $replied ? '' : ' open' ?>" method="post" action="/admin/comments.php">
                     <?= csrf_field() ?>

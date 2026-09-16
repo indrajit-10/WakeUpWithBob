@@ -204,10 +204,15 @@ function update_admin_reply(int $commentId, string $body): void {
         ->execute([$body, $commentId]);
 }
 
-/** Delete one of Bob's replies, reversing what reply_to_comment() added: the
- *  parent's reply_count and the question's comment_count. Same is_admin_reply
- *  guard, checked before the delete so a reader's comment can never be removed
- *  through this path. */
+/** Delete one of Bob's replies. Same is_admin_reply guard, checked before the
+ *  delete so a reader's comment can never be removed through this path.
+ *
+ *  The counters are RESYNCED from a COUNT rather than decremented by one, for
+ *  the same reason reject_comment() does it: parent_id is ON DELETE CASCADE, so
+ *  if a reader had replied to Bob, deleting Bob's reply takes their reply with
+ *  it. A blind "- 1" then leaves comment_count one too high for good, and the
+ *  feed card shows a number the thread cannot account for. Counting the truth
+ *  is correct however deep the cascade went. */
 function delete_admin_reply(int $commentId): void {
     global $pdo;
 
@@ -219,12 +224,19 @@ function delete_admin_reply(int $commentId): void {
     }
 
     $pdo->prepare('DELETE FROM comments WHERE id = ? AND is_admin_reply = 1')->execute([$commentId]);
-    $pdo->prepare('UPDATE questions SET comment_count = MAX(0, comment_count - 1) WHERE id = ?')
-        ->execute([$reply['question_id']]);
+
+    $pdo->prepare(
+        'UPDATE questions SET comment_count =
+           (SELECT COUNT(*) FROM comments WHERE question_id = ? AND approved = 1)
+         WHERE id = ?'
+    )->execute([$reply['question_id'], $reply['question_id']]);
 
     if ($reply['parent_id']) {
-        $pdo->prepare('UPDATE comments SET reply_count = MAX(0, reply_count - 1) WHERE id = ?')
-            ->execute([$reply['parent_id']]);
+        $pdo->prepare(
+            'UPDATE comments SET reply_count =
+               (SELECT COUNT(*) FROM comments r WHERE r.parent_id = ? AND r.approved = 1)
+             WHERE id = ?'
+        )->execute([$reply['parent_id'], $reply['parent_id']]);
     }
 }
 

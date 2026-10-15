@@ -13,6 +13,7 @@
  *   data-navigate (on a <select>)           → changing it navigates to the chosen option's value
  *   data-confirm="Are you sure?"            → submit is cancelled unless the user confirms
  *   data-share-copy="TEXT"                  → click copies TEXT to the clipboard
+ *   data-sub-q="POST_ID" (subscribe button) → notes which post the popup was opened from
  */
 (function () {
   'use strict';
@@ -131,5 +132,117 @@
     try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
     document.body.removeChild(ta);
     done(ok);
+  });
+
+  // --- subscribe popup -----------------------------------------------------
+  // Opening and closing is the plain data-toggle handler at the top of this file
+  // (the button, the × and the dark backdrop all toggle "open"), so the popup
+  // still works for anyone whose browser has an older copy of this file cached.
+  // This adds what a dialog needs on top: Esc closes it, the page behind stops
+  // scrolling, focus moves into it and back, and the post it was opened from is
+  // noted for the admin list.
+  var subOpener = null;
+  var subOpenedAt = 0;
+
+  function subscribePop() { return document.getElementById('subscribe-pop'); }
+
+  // While the popup is open the rest of the page is held still: it cannot
+  // scroll, and (inert) Tab cannot wander onto links hidden behind the backdrop.
+  // The popup is a direct child of <body>, so its siblings are exactly "the rest
+  // of the page".
+  function lockPage(lock) {
+    var root = document.documentElement;
+    var pop = subscribePop();
+    if (lock) {
+      // the scrollbar disappears while locked — pad by its width so nothing jumps
+      var bar = window.innerWidth - root.clientWidth;
+      if (bar > 0) { document.body.style.paddingRight = bar + 'px'; }
+      root.classList.add('subpop-lock');
+    } else {
+      root.classList.remove('subpop-lock');
+      document.body.style.paddingRight = '';
+    }
+    var kids = document.body.children;
+    for (var i = 0; i < kids.length; i++) {
+      if (kids[i] !== pop) { kids[i].inert = lock; }
+    }
+  }
+
+  function afterSubscribeToggle(pop, trigger) {
+    if (pop.classList.contains('open')) {
+      // Never lock the page behind a popup the reader cannot see (a browser
+      // still holding an old styles.css has no rule to show it).
+      if (window.getComputedStyle(pop).display === 'none') {
+        pop.classList.remove('open');
+        return;
+      }
+      lockPage(true);
+      subOpenedAt = Date.now();
+      subOpener = trigger;
+      var q = pop.querySelector('input[name="q"]');
+      if (q && trigger && trigger.hasAttribute('data-sub-q')) {
+        q.value = trigger.getAttribute('data-sub-q');
+      }
+      var panel = pop.querySelector('.subpop-panel');
+      if (panel) { panel.focus(); }        // the dialog, not the email box: no surprise phone keyboard
+    } else {
+      lockPage(false);
+      if (subOpener && document.body.contains(subOpener)) { subOpener.focus(); }
+      subOpener = null;
+    }
+  }
+
+  // Runs after the data-toggle handler above (listeners fire in the order they
+  // were added), so the popup has already been opened or closed by now.
+  document.addEventListener('click', function (event) {
+    var trigger = event.target.closest('[data-toggle="subscribe-pop"]');
+    var pop = trigger ? subscribePop() : null;
+    if (!pop) { return; }
+    // A double-click on the button lands its second click on the backdrop that
+    // has just appeared under the pointer. That must not shut it again at once.
+    if (trigger.classList.contains('subpop-backdrop') && !pop.classList.contains('open')
+        && Date.now() - subOpenedAt < 500) {
+      pop.classList.add('open');
+      return;
+    }
+    afterSubscribeToggle(pop, trigger.classList.contains('pill-sub') ? trigger : null);
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape') { return; }
+    var pop = subscribePop();
+    if (pop && pop.classList.contains('open')) {
+      pop.classList.remove('open');
+      afterSubscribeToggle(pop, null);
+    }
+  });
+
+  // Subscribe forms: one click, one sign-up. The browser has already checked the
+  // email box by the time this runs (submit only fires for a valid form).
+  document.addEventListener('submit', function (event) {
+    var form = event.target.closest('.subform');
+    if (!form || event.defaultPrevented) { return; }
+    var btn = form.querySelector('.subform-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.setAttribute('data-label', btn.textContent);
+      btn.textContent = 'Subscribing…';
+    }
+  });
+
+  // Coming back with the Back button can restore the page exactly as it was left
+  // (button still "Subscribing…", popup still open) — put both back to normal.
+  window.addEventListener('pageshow', function () {
+    var btns = document.querySelectorAll('.subform-btn[data-label]');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].disabled = false;
+      btns[i].textContent = btns[i].getAttribute('data-label');
+      btns[i].removeAttribute('data-label');
+    }
+    var pop = subscribePop();
+    if (pop && pop.classList.contains('open')) {
+      pop.classList.remove('open');
+      lockPage(false);
+    }
   });
 })();

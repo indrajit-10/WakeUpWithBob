@@ -71,7 +71,23 @@ CREATE TABLE IF NOT EXISTS settings (
   value TEXT NOT NULL DEFAULT ''
 );
 
+-- Newsletter sign-ups from the "Subscribe To Read More" popup and the sidebar
+-- box. Email only — no name, no IP. No email is sent from the site: Bob downloads
+-- the list from Admin → Subscribers and hands it to the mailing team.
+-- email is UNIQUE (case-insensitive), so signing up twice keeps the first row.
+-- source = 'post' or 'sidebar'; question_id = the post whose button was used
+-- (0 when unknown). No foreign key on purpose: deleting a post must never delete
+-- the people who subscribed from it.
+CREATE TABLE IF NOT EXISTS subscribers (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  email       TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+  source      TEXT    NOT NULL DEFAULT 'post',
+  question_id INTEGER NOT NULL DEFAULT 0,
+  created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_questions_created   ON questions (created_at);
 CREATE INDEX IF NOT EXISTS idx_questions_number    ON questions (post_number);
 CREATE INDEX IF NOT EXISTS idx_comments_q_approved ON comments (question_id, approved);
 CREATE INDEX IF NOT EXISTS idx_searches_created    ON searches (created_at);
+CREATE INDEX IF NOT EXISTS idx_subscribers_created ON subscribers (created_at);

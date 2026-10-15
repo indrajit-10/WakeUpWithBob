@@ -141,8 +141,11 @@ require __DIR__ . '/../app/views/header.php';
         <?php endif; ?>
 
         <div class="actions">
+          <span class="actions-main">
           <a class="pill" href="#add-comment"><svg class="ico ico-sm"><use href="#i-comment"/></svg><?= $commentTotal ?> Comments</a>
           <?php $q = $question; include __DIR__ . '/../app/views/share-menu.php'; ?>
+          </span>
+          <button class="pill pill-sub" type="button" data-toggle="subscribe-pop" data-toggle-class="open" data-sub-q="<?= (int) $question['id'] ?>">Subscribe To Read More</button>
         </div>
       </article>
 

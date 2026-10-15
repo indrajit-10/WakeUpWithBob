@@ -12,8 +12,11 @@ $showChrome = $showSearch ?? true;        // public pages get search + nav; admi
   <title><?= e($pageTitle) ?></title>
   <link rel="icon" href="/assets/img/logo.svg">
   <script src="/assets/js/theme-init.js"></script>
-  <link rel="stylesheet" href="/assets/css/styles.css">
-  <script src="/assets/js/app.js" defer></script>
+  <?php /* ?v= changes whenever the file on the server changes, so every browser
+           fetches the new copy straight after an upload instead of using an old cached one. */
+        $__ver = static fn (string $f): string => (string) @filemtime(__DIR__ . '/../../public/assets/' . $f); ?>
+  <link rel="stylesheet" href="/assets/css/styles.css?v=<?= e($__ver('css/styles.css')) ?>">
+  <script src="/assets/js/app.js?v=<?= e($__ver('js/app.js')) ?>" defer></script>
   <?php /* Page-specific scripts (e.g. the admin editor). Local paths only — the
            CSP allows script-src 'self', and nothing here is ever user-supplied. */ ?>
   <?php foreach (($extraJs ?? []) as $__js): ?>

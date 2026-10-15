@@ -26,10 +26,13 @@ $hl = $highlightTerms ?? [];
   <?php endif; ?>
 
   <div class="actions">
+    <span class="actions-main">
     <button class="pill" type="button" data-scrollto="comment-form-<?= $qid ?>">
       <svg class="ico ico-sm"><use href="#i-comment"/></svg><?= (int) $q['comment_count'] ?>
     </button>
     <?php include __DIR__ . '/share-menu.php'; ?>
+    </span>
+    <button class="pill pill-sub" type="button" data-toggle="subscribe-pop" data-toggle-class="open" data-sub-q="<?= $qid ?>">Subscribe To Read More</button>
   </div>
 
   <?php if ($top): ?>

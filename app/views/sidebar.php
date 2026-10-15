@@ -35,3 +35,19 @@
     <a href="https://human.123greetings.com/contact.php" class="btn-orange">Send Email To Bob</a>
   </div>
 </div>
+
+<?php /* Subscribe box — directly below "Send Email To Bob". This file is included
+         twice per page (desktop right rail + mobile menu), so no ids in here.
+         Same handler as the popup: /subscribe.php, which only stores the email. */ ?>
+<div class="widget subbox">
+  <div class="widget-b">
+    <p class="subbox-text">Every day, Bob sits down with a cup of coffee and asks one simple question. You are invited to sit with him.</p>
+    <form class="subform" method="post" action="/subscribe.php">
+      <?= csrf_field() ?>
+      <input type="hidden" name="source" value="sidebar">
+      <div style="position:absolute; left:-9999px" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></div>
+      <input class="subform-input" type="email" name="email" required maxlength="254" pattern="[^@\s=+\-][^@\s]*@[A-Za-z0-9.\-]+\.[A-Za-z0-9\-]{2,}" title="Please enter a valid email address, like name@example.com" placeholder="your@email.com" autocomplete="email" aria-label="Your email address">
+      <button class="subform-btn" type="submit">Subscribe free</button>
+    </form>
+  </div>
+</div>

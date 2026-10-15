@@ -8,7 +8,7 @@ require __DIR__ . '/../app/db.php';
 
 ensure_session();
 
-$updated = 'July 2026';   // ← update this date whenever you change the policy
+$updated = 'October 2026';   // ← update this date whenever you change the policy
 
 $pageTitle = 'Privacy · ' . SITE_NAME;
 require __DIR__ . '/../app/views/header.php';
@@ -33,6 +33,7 @@ require __DIR__ . '/../app/views/header.php';
         <ul>
           <li><b>What you post.</b> The comments and replies you submit, and the name you optionally attach to them.</li>
           <li><b>An email address — only if you give one.</b> When you use “Ask Bob a question”, “Send feedback”, or the Contact form, you may add an email so Bob can reply. It is never required, and never shown publicly.</li>
+          <li><b>Your email, if you subscribe.</b> When you subscribe to Bob’s posts, we keep your email address, the date and time you signed up, and where you signed up (which post’s Subscribe button, or the sidebar box). Nothing else, and it is never shown publicly.</li>
           <li><b>One small cookie.</b> A session cookie that keeps the site working — and remembers the name you last commented with, on this device. That is the only cookie we set.</li>
           <li><b>Anonymous search logs.</b> The words you type into search and how many results came back, with a timestamp. This is <i>not</i> linked to you — no IP address, no name, no cookie tie-in.</li>
         </ul>
@@ -41,6 +42,7 @@ require __DIR__ . '/../app/views/header.php';
         <ul>
           <li>Show your comment or reply once Bob has approved it.</li>
           <li>Let Bob read and, if you left an email, reply to a question or note you sent in.</li>
+          <li>If you subscribed, send Bob’s posts to your inbox. Your address is shared only with the team that sends those emails, and only for that. To stop, use the unsubscribe link in any of the emails, or ask us via the <a href="/contact.php">Contact page</a>.</li>
           <li>Keep an anonymous tally of what people search for, so Bob can see what readers are looking for and write better mornings.</li>
         </ul>
 

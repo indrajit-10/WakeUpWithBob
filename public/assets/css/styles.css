@@ -243,10 +243,13 @@ a{color:inherit; text-decoration:none}
 .share-opt:hover{background:var(--pill)}
 /* On a phone the card is only ~330px wide, so a panel hung off the button can
    overhang either edge depending on how wide the comment pill is. Anchor it to
-   the .actions row instead — that is the card's own content box, so the panel
-   is guaranteed to sit inside the card whatever the pills do. */
+   the Comments + Share row (.actions-main, the card's full width on a phone)
+   instead — that is the card's own content box, so the panel is guaranteed to
+   sit inside the card whatever the pills do, and it opens right under Share,
+   not under the Subscribe button that wraps onto the line below. */
+.actions-main{display:contents}   /* desktop: no box of its own, the row lays out exactly as before */
 @media (max-width:600px){
-  .actions{position:relative}
+  .actions-main{display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex:1 1 100%; position:relative}
   .share-wrap{position:static}
   .share-menu{left:auto; right:0; width:min(240px, calc(100vw - 56px))}
 }
@@ -777,3 +780,72 @@ mark{background:var(--orange-tint); color:inherit; border-radius:4px; padding:0 
 .scrollmt20 {
     scroll-margin-top: 20px;
 }
+/* ============ Subscribe: post button, popup, sidebar box ============
+   Colours are the ones in the design (cream / coffee brown / gold). The popup
+   and the sidebar box stay cream in dark mode too: they are a branded card, and
+   brown-on-cream keeps its contrast whatever the page behind them is doing.
+   The gold on the brown button is a little lighter than the mock-up's, which
+   was too faint to read (2.7:1); this one is 7.3:1. */
+.pill-sub{background:#3D2B1F; color:#FDF6EE}
+.pill-sub:hover{background:#56402F}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill-sub{background:#6B4A2E}}
+:root[data-theme="dark"] .pill-sub{background:#6B4A2E}
+
+/* while the popup is open, the page behind it does not scroll (set by app.js).
+   Only the root: locking <body> as well makes body the scroll box, and the sticky
+   top bar and side rails then jump up by however far the page was scrolled. */
+html.subpop-lock{overflow:hidden}
+
+.subpop{display:none; position:fixed; inset:0; z-index:70; align-items:center; justify-content:center; padding:16px}
+.subpop.open{display:flex}          /* beats the [hidden] attribute the markup ships with */
+.subpop-backdrop{position:absolute; inset:0; background:rgba(28,20,12,.55)}
+.subpop-panel{position:relative; width:min(640px,100%); max-height:calc(100vh - 32px); max-height:calc(100dvh - 32px);
+  overflow-y:auto; overscroll-behavior:contain; background:#FDF6EE; color:#2C2416; border-radius:18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.35); padding:42px 44px 32px; text-align:center; outline:none}
+.subpop-close{position:absolute; top:10px; right:12px; width:38px; height:38px; padding:0; border:0; border-radius:50%;
+  background:transparent; color:#5A4A38; font-size:28px; line-height:1; cursor:pointer}
+.subpop-close:hover{background:rgba(61,43,31,.08); color:#2C2416}
+.subpop-kicker{margin:0 0 14px; font-size:12px; font-weight:600; letter-spacing:.22em; text-transform:uppercase; color:#96680A}
+.subpop-title{margin:0 0 18px; font-family:Georgia,"Times New Roman",serif; font-weight:400; font-size:clamp(2rem,6vw,3.1rem);
+  line-height:1.12; letter-spacing:-.01em; color:#2C2416}
+.subpop-title em{font-style:italic; color:#96680A}
+.subpop-title .nowrap{white-space:nowrap}   /* breaks as in the design: "…mean / to be human?" */
+.subpop-intro{margin:0 auto 26px; max-width:470px; font-size:1.05rem; line-height:1.7; color:#5A4A38}
+.subform{display:flex; flex-wrap:wrap; gap:10px; justify-content:center}
+.subform-input{flex:1 1 220px; min-width:0; max-width:300px; background:#fff; border:1px solid #D4C4B0; border-radius:10px;
+  padding:13px 15px; font:inherit; font-size:15px; color:#2C2416; outline:none}
+.subform-input::placeholder{color:#9E8E7A}
+.subform-input:focus{border-color:#96680A; box-shadow:0 0 0 3px rgba(150,104,10,.15)}
+.subform-btn{flex:0 0 auto; background:#3D2B1F; color:#E8B85A; border:1px solid #3D2B1F; border-radius:10px;
+  padding:13px 24px; font:inherit; font-size:15px; font-weight:700; cursor:pointer}
+.subform-btn:hover{background:#2A1D14}
+.subform-btn:disabled{opacity:.7; cursor:default}
+.subpop-legal{margin:22px 0 10px; font-size:11.5px; color:#7A6A56}
+.subpop-legal a{color:#96680A; text-decoration:underline; text-underline-offset:2px}
+.subpop-first{margin:0 0 12px; font-size:13px; font-weight:700; color:#2C2416}
+.subpop-tip{margin:0 auto; max-width:420px; font-size:15px; font-weight:700; line-height:1.6; color:#1F1A12}
+@media (max-width:520px){
+  .subpop{padding:10px}
+  .subpop-panel{padding:36px 20px 24px; max-height:calc(100vh - 20px); max-height:calc(100dvh - 20px)}
+  .subpop-kicker{font-size:11px; letter-spacing:.12em}   /* stays on one line on a phone */
+  .subpop-intro{font-size:1rem; margin-bottom:20px}
+  .subform-input{max-width:none; flex-basis:100%}
+  .subform-btn{flex-basis:100%}
+}
+
+/* sidebar box (desktop right rail + mobile menu): the line, the email box, the button */
+.subbox{background:#FDF6EE; border-color:#E8DCCB}
+.subbox .widget-b{padding:18px}
+.subbox .subbox-text{margin:0 0 14px; font-size:15px; line-height:1.6; color:#5A4A38; text-align:center}
+.subbox .subform-input{max-width:none; flex-basis:100%}
+.subbox .subform-btn{flex-basis:100%}
+
+/* admin · subscribers */
+.sub-export{display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px}
+.sub-export label{display:flex; flex-direction:column; gap:6px; font-weight:700; font-size:.9rem}
+.sub-export input[type="date"]{background:var(--bg); border:1px solid var(--border); border-radius:11px; padding:9px 12px; font:inherit; color:var(--text)}
+.sub-export .btn-orange{width:auto; padding:12px 22px; font-size:15px}
+.sub-export .pill{padding:12px 18px}
+.sub-table .sub-email{font-weight:600; word-break:break-all}
+.sub-table form{margin:0}
+.sub-table .mod-btn{padding:6px 14px; font-size:.82rem}

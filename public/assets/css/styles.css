@@ -362,7 +362,16 @@ a{color:inherit; text-decoration:none}
 .admin-list span{color:var(--meta); font-size:.85rem}
 .muted{color:var(--meta)}
 
-@media (max-width:1080px){ .shell{grid-template-columns:230px minmax(0,1fr)} .right{display:none} }
+/* At 1080px and narrower the right column is hidden, so the hamburger menu carries
+   its contents (sidebar buttons, Send Email To Bob, subscribe box). Keep these in the
+   same block: whenever .right is hidden, the hamburger must show. */
+@media (max-width:1080px){
+  .shell{grid-template-columns:230px minmax(0,1fr)} .right{display:none}
+  .hamburger{display:inline-flex}
+  .mdrawer.open{display:block}
+}
+/* 761–1080px: the left menu is still on screen, so the hamburger menu skips it. */
+@media (min-width:761px) and (max-width:1080px){ .mdrawer-nav{display:none} }
 .shell--question{grid-template-columns:1fr; padding:36px 20px;}
 .shell--question .center{max-width:920px; margin:0 auto; padding:0 18px}
 .shell--question .feedhead{display:block; text-align:left; margin-bottom:8px}
@@ -849,3 +858,21 @@ html.subpop-lock{overflow:hidden}
 .sub-table .sub-email{font-weight:600; word-break:break-all}
 .sub-table form{margin:0}
 .sub-table .mod-btn{padding:6px 14px; font-size:.82rem}
+
+/* sidebar buttons (Admin → Settings → Sidebar buttons): same shape as "Send Email
+   To Bob", in maroon, and the text shows exactly as typed (no auto-capitals) */
+.cta-widget .widget-b{display:flex; flex-direction:column; gap:12px}
+.btn-maroon{background:#800000; text-transform:none; gap:9px; text-align:center; line-height:1.25; padding:13px 18px; overflow-wrap:anywhere}
+/* (line-height + padding keep a one-line button exactly as tall as Send Email To Bob;
+   a longer text that wraps on a phone stays centred and readable) */
+.btn-maroon .cta-ico{width:22px; height:22px; margin:-3px 0}   /* icon a bit bigger than the text, button height unchanged */
+
+/* admin · sidebar buttons form */
+.cta-edit{border:1px solid var(--border); border-radius:12px; padding:12px 16px 4px; margin:0 0 14px; display:flex; flex-direction:column; gap:10px}
+.cta-edit legend{font-weight:800; padding:0 6px}
+.admin-form .cta-show{flex-direction:row; align-items:center; gap:8px; font-weight:600}
+.admin-form .cta-show input{width:auto; margin:0}
+.admin-form .cta-show input:focus-visible{outline:2px solid var(--blue); outline-offset:2px}
+.cta-edit select{width:100%; background:var(--bg); border:1px solid var(--border); border-radius:11px; padding:10px 12px; font:inherit; color:var(--text)}
+.cta-preview{display:flex; flex-direction:column; gap:6px; max-width:320px; margin-bottom:8px}
+.cta-preview .btn-maroon{cursor:default}

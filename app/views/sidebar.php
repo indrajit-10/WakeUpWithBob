@@ -28,6 +28,20 @@
   </div>
 </div>
 
+<?php /* Sidebar buttons — maroon, above "Send Email To Bob". Text and links are
+         edited in Admin → Settings (see app/ctas.php). Open in a new tab; plain
+         "noopener" (no "noreferrer") so 123greetings.com can see the visit came from here. */
+if (is_file(__DIR__ . '/../ctas.php')) { require_once __DIR__ . '/../ctas.php'; }   // never break the page if it is missing
+if (function_exists('sidebar_ctas') && ($__ctas = sidebar_ctas())): ?>
+<div class="widget cta-widget">
+  <div class="widget-b">
+    <?php foreach ($__ctas as $__cta): ?>
+      <a class="btn-orange btn-maroon" href="<?= e($__cta['url']) ?>" target="_blank" rel="noopener"><?= sidebar_cta_icon_svg($__cta['icon']) ?><?= e($__cta['text']) ?></a>
+    <?php endforeach; ?>
+  </div>
+</div>
+<?php endif; ?>
+
 <div class="widget">
   <img src="https://human.123greetings.com/assets/img/Bob-Profile.jpg" width="100%" height="auto" alt="Bob Profile Image">
   <div class="widget-b">

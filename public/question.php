@@ -106,9 +106,62 @@ function render_comment_card(array $comment, array $repliesByParent, int $depth 
     <?php
 }
 
+// --- Mo Magic / TrueReach interstitial ad: THIS PAGE ONLY ----------------------
+// Both "Question not found" exits above stop before this point, so a 404 gets no
+// ad. Never shown while logged in to admin (ad scripts get full access to the page),
+// and at most one ad per visitor every $trAdGap seconds.
+$trAdGap  = 120;   // seconds between ads for one visitor; 0 = every post view
+$showTrAd = empty($_SESSION['admin_id'])
+         && time() - (int) ($_SESSION['tr_ad_at'] ?? 0) >= $trAdGap;
+if ($showTrAd) {
+    $_SESSION['tr_ad_at'] = time();
+    // Replaces the site-wide security rule for this one page view only (header()
+    // replaces by default; never pass false). Google's ad tag needs this "strict"
+    // rule: a script runs only if it carries this page's nonce or was loaded by one
+    // that does, so a script slipped into a comment still cannot run.
+    header("Content-Security-Policy: "
+        . "default-src 'self'; base-uri 'self'; object-src 'none'; "
+        . "frame-ancestors 'self'; form-action 'self'; "
+        . "img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; "
+        . "frame-src https:; connect-src 'self' https:; "
+        . "script-src 'nonce-" . csp_nonce() . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https:");
+}
+
+
 $pageTitle = post_label($question['title'], $question['body'], $question['post_number'] ?? null) . ' · ' . SITE_NAME;
 require __DIR__ . '/../app/views/header.php';
 ?>
+
+<?php if ($showTrAd): ?>
+
+    <!-- Google SafeFrame Configuration -->
+    <script nonce="<?= e(csp_nonce()) ?>">
+        window.googletag = window.googletag || {cmd:[]};
+
+        googletag.cmd.push(function() {
+            googletag.setConfig({
+                safeFrame: {
+                    forceSafeFrame: true
+                }
+            });
+        });
+    </script>
+
+    <!-- MoMagic TrueReach Ad Script -->
+    <script
+        defer
+        type="text/javascript"
+        id="interactive_js_adcode"
+        nonce="<?= e(csp_nonce()) ?>"
+        src="https://cdn.momagic.com/publisher/3d64cfc3-83fc-11f1-8ca4-8324842a64f3/truereachAdRender.js">
+    </script>
+
+    <!-- Advertisement Container -->
+    <div id="TR-45df57a1-d756-11f1-8770-d352accec7f8"></div>
+
+<?php endif; ?>
+
+
 <div class="app">
   <div class="shell">
 
@@ -145,7 +198,7 @@ require __DIR__ . '/../app/views/header.php';
           <a class="pill" href="#add-comment"><svg class="ico ico-sm"><use href="#i-comment"/></svg><?= $commentTotal ?> Comments</a>
           <?php $q = $question; include __DIR__ . '/../app/views/share-menu.php'; ?>
           </span>
-          <button class="pill pill-sub" type="button" data-toggle="subscribe-pop" data-toggle-class="open" data-sub-q="<?= (int) $question['id'] ?>">Subscribe To Read More</button>
+          <!-- <button class="pill pill-sub" type="button" data-toggle="subscribe-pop" data-toggle-class="open" data-sub-q="<?= (int) $question['id'] ?>">Subscribe To Read More</button> -->
         </div>
       </article>
 
@@ -186,5 +239,6 @@ require __DIR__ . '/../app/views/header.php';
     </aside>
 
   </div>
+
 </div>
 <?php require __DIR__ . '/../app/views/footer.php'; ?>

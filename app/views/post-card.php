@@ -32,7 +32,7 @@ $hl = $highlightTerms ?? [];
     </button>
     <?php include __DIR__ . '/share-menu.php'; ?>
     </span>
-    <button class="pill pill-sub" type="button" data-toggle="subscribe-pop" data-toggle-class="open" data-sub-q="<?= $qid ?>">Subscribe To Read More</button>
+    <!-- <button class="pill pill-sub" type="button" data-toggle="subscribe-pop" data-toggle-class="open" data-sub-q="<?= $qid ?>">Subscribe To Read More</button> -->
   </div>
 
   <?php if ($top): ?>

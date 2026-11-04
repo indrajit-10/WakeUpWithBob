@@ -34,9 +34,9 @@ $year = date('Y');
   <div class="foot-bar">
     <span class="foot-copy">&copy; <?= e($year) ?> <?= e(SITE_NAME) ?></span>
     <span class="foot-legal">
-      <a href="/privacy.php">Privacy</a>
-      <span class="foot-dot">·</span>
-      <a href="/terms.php">Terms</a>
+      <!-- <a href="/privacy.php">Privacy</a>
+      <span class="foot-dot">·</span> -->
+      <a href="/terms.php">Terms of Use</a>
     </span>
   </div>
 </footer>

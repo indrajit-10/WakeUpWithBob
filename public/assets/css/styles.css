@@ -862,7 +862,7 @@ html.subpop-lock{overflow:hidden}
 /* sidebar buttons (Admin → Settings → Sidebar buttons): same shape as "Send Email
    To Bob", in maroon, and the text shows exactly as typed (no auto-capitals) */
 .cta-widget .widget-b{display:flex; flex-direction:column; gap:12px}
-.btn-maroon{background:#800000; text-transform:none; gap:9px; text-align:center; line-height:1.25; padding:13px 18px; overflow-wrap:anywhere}
+.btn-maroon{background:#00537c; text-transform:none; gap:5px; text-align:center; line-height:1.25; padding:13px 5px; overflow-wrap:anywhere; font-size: 15px;}
 /* (line-height + padding keep a one-line button exactly as tall as Send Email To Bob;
    a longer text that wraps on a phone stays centred and readable) */
 .btn-maroon .cta-ico{width:22px; height:22px; margin:-3px 0}   /* icon a bit bigger than the text, button height unchanged */
@@ -876,3 +876,5 @@ html.subpop-lock{overflow:hidden}
 .cta-edit select{width:100%; background:var(--bg); border:1px solid var(--border); border-radius:11px; padding:10px 12px; font:inherit; color:var(--text)}
 .cta-preview{display:flex; flex-direction:column; gap:6px; max-width:320px; margin-bottom:8px}
 .cta-preview .btn-maroon{cursor:default}
+
+

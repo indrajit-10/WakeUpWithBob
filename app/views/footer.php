@@ -67,5 +67,6 @@ $year = date('Y');
   </div>
 </div>
 <?php endif; ?>
+
 </body>
 </html>

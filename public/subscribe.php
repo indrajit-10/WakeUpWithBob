@@ -4,14 +4,78 @@
  * (  POST /subscribe.php  ) and sends the reader back to the page they were on,
  * where the top banner shows the result.
  *
- * Phase 1: the address is only stored. No email is sent from here — Bob downloads
- * the list from Admin → Subscribers and hands it to the mailing team.
+ * The address is stored here (Admin → Subscribers) and also added to the
+ * 123Greetings newsletter list, the same list the form on newsletter.123greetings.com
+ * fills (see newsletter_add() below). No email is sent from here.
  *
  * Signing up twice with the same address keeps the first row and shows the same
  * thank-you, so this form cannot be used to find out who is subscribed.
  */
 require __DIR__ . '/../app/helpers.php';
 require __DIR__ . '/../app/db.php';
+
+/** Where the 123Greetings newsletter list takes sign-ups (POST email=…, answers {"ok":…,"msg":…}). */
+const NEWSLETTER_SUBSCRIBE_URL = 'https://secondchance.123greetings.info/newsletter/subscribe';
+
+/**
+ * Adds one address to the 123Greetings newsletter list. Sent from this server, so
+ * the reader's browser never talks to that site. It never stops a sign-up: if that
+ * server is slow, down or turns the address away, the reader waits at most about
+ * 5 seconds, still gets the thank-you and is still in Admin → Subscribers, and the
+ * reason is written to the PHP error log.
+ */
+function newsletter_add(string $email): void
+{
+    $body    = http_build_query(['email' => $email]);
+    $headers = [
+        'Content-Type: application/x-www-form-urlencoded',
+        'Accept: application/json',
+        'User-Agent: Mozilla/5.0 (compatible; human.123greetings.com sign-up)',
+    ];
+    $status = 0;
+    $error  = '';
+
+    // Some hosts keep curl but switch off curl_exec: then use the other way.
+    if (function_exists('curl_init') && function_exists('curl_exec')) {
+        $ch = curl_init(NEWSLETTER_SUBSCRIBE_URL);
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $body,
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 3,
+            CURLOPT_TIMEOUT        => 5,
+        ]);
+        $reply  = curl_exec($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $error  = curl_error($ch);
+    } else {
+        // No curl on this server: PHP's own HTTP client (needs allow_url_fopen on).
+        $reply = @file_get_contents(NEWSLETTER_SUBSCRIBE_URL, false, stream_context_create(['http' => [
+            'method'        => 'POST',
+            'header'        => implode("\r\n", $headers),
+            'content'       => $body,
+            'timeout'       => 5,
+            'ignore_errors' => true,              // read their answer even on an error status
+        ]]));
+        if ($reply === false) {
+            $error = (string) (error_get_last()['message'] ?? 'no answer');
+        }
+    }
+
+    $answer = is_string($reply) ? json_decode($reply, true) : null;
+    if (is_array($answer) && ($answer['ok'] ?? null) === true) {
+        return;                                   // added to their list
+    }
+    $why = (is_array($answer) && is_string($answer['msg'] ?? null)) ? $answer['msg']
+         : ($error !== '' ? $error : 'unexpected answer');
+    // The address itself is left out: readers' emails don't belong in a log file.
+    // Their reply can repeat it ("… is already subscribed"), so it is masked there too.
+    $why = str_ireplace($email, '[address]', $why);
+    error_log('subscribe: newsletter list did not take an address'
+        . ($status > 0 ? ' (HTTP ' . $status . ')' : '') . ': '
+        . preg_replace('/[\x00-\x1F\x7F]+/', ' ', mb_substr($why, 0, 200)));
+}
 
 require_post();
 ensure_session();
@@ -81,6 +145,16 @@ try {
     error_log('subscribe: ' . $e->getMessage());
     flash_set('Sorry, that didn’t go through. Please try again.');
     redirect($back);
+}
+
+// Saved here; now the same address goes onto the 123Greetings newsletter list too.
+// Someone already in Admin → Subscribers who signs up again is sent again: that
+// list deals with repeats itself. Nothing that goes wrong in there may cost the
+// reader their thank-you.
+try {
+    newsletter_add($email);
+} catch (Throwable $e) {
+    error_log('subscribe: newsletter list call failed: ' . get_class($e) . ': ' . $e->getMessage());
 }
 
 flash_set($thanks);

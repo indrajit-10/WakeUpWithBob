@@ -156,7 +156,7 @@ a{color:inherit; text-decoration:none}
 /* post card */
 .post{background:var(--card); border-radius:var(--radius); padding:18px 22px; margin-bottom:14px; border:1px solid var(--border)}
 .post:hover{border-color:var(--pill-h)}
-.post-meta{display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--meta)}
+.post-meta{display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--meta); flex-wrap: balance;}
 .inline-comment-section{margin-top:18px; border-top:1px solid var(--border); padding-top:16px}
 .inline-comment-form{display:grid; gap:12px}
 .inline-input,.inline-textarea{width:100%; background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:12px 14px; font:inherit; color:var(--text); outline:none}
@@ -890,10 +890,9 @@ html.subpop-lock{overflow:hidden}
 .cookie-note-text{margin:0 0 20px}
 .cookie-note-text a{color:inherit; text-decoration:underline}
 .cookie-note-btn{display:block; width:100%; background:#00537B; color:#fff; border:0; padding:11px 16px;
-  font:inherit; font-weight:700; cursor:pointer}
+  font:inherit; font-weight:600; cursor:pointer}
 .cookie-note-btn:hover{filter:brightness(1.12)}
-.cookie-note-x{position:absolute; top:0; right:4px; width:40px; height:28px; padding:0; background:none; border:0;
-  color:#000; font-size:24px; line-height:1; cursor:pointer}
+.cookie-note-x{position: absolute; top: 7px; right: 4px; width: 40px; height: 28px; padding: 0; background: none; border: 0; color: #000; font-size: 30px; line-height: 1; cursor: pointer;}
 @media (max-width:760px){
   .cookie-note{left:0; right:0; bottom:0; width:auto; padding:28px 24px 24px; box-shadow:0 -4px 20px rgba(0,0,0,.15)}
 }

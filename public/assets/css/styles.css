@@ -877,4 +877,19 @@ html.subpop-lock{overflow:hidden}
 .cta-preview{display:flex; flex-direction:column; gap:6px; max-width:320px; margin-bottom:8px}
 .cta-preview .btn-maroon{cursor:default}
 
-
+/* cookie notice: the same look as blog.123greetings.com. A white box at the
+   bottom-right on desktop and tablet, a full-width bar at the bottom on phones.
+   It sits under the hamburger menu (60), the subscribe popup (70) and the ad. */
+.cookie-note{position:fixed; right:20px; bottom:20px; z-index:55; width:min(368px, calc(100vw - 40px));
+  background:#fff; color:#000; padding:30px 32px 32px; box-shadow:0 8px 30px rgba(0,0,0,.18);
+  font-family:var(--sans); font-size:15px; line-height:1.6}
+.cookie-note-text{margin:0 0 20px}
+.cookie-note-text a{color:inherit; text-decoration:underline}
+.cookie-note-btn{display:block; width:100%; background:#00537B; color:#fff; border:0; padding:11px 16px;
+  font:inherit; font-weight:700; cursor:pointer}
+.cookie-note-btn:hover{filter:brightness(1.12)}
+.cookie-note-x{position:absolute; top:4px; right:8px; width:36px; height:36px; padding:0; background:none; border:0;
+  color:#000; font-size:24px; line-height:1; cursor:pointer}
+@media (max-width:760px){
+  .cookie-note{left:0; right:0; bottom:0; width:auto; padding:28px 24px 24px; box-shadow:0 -4px 20px rgba(0,0,0,.15)}
+}

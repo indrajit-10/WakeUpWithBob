@@ -67,6 +67,17 @@ $year = date('Y');
   </div>
 </div>
 <?php endif; ?>
+<?php if (!empty($showChrome) && empty($_COOKIE['cookie_notice'])): /* public pages only, until accepted */ ?>
+<?php /* Cookie notice: the same wording and look as blog.123greetings.com. A notice
+         only, nothing is blocked. "Accept" or the X hides it for the rest of the
+         browser session: app.js sets a cookie with no expiry date, which the browser
+         deletes when it is closed, so the notice is shown again on the next visit. */ ?>
+<div class="cookie-note" role="dialog" aria-live="polite" aria-label="Cookie notice" aria-describedby="cookie-note-text" data-cookie-note>
+  <button class="cookie-note-x" type="button" aria-label="Close" data-cookie-accept>&times;</button>
+  <p class="cookie-note-text" id="cookie-note-text">We use cookies to make your experience sweeter! By using our site, you agree to our <a href="https://www.123greetings.com/cookie_policy.html" target="_blank" rel="noopener noreferrer nofollow">Cookie Policy.</a></p>
+  <button class="cookie-note-btn" type="button" data-cookie-accept>Accept</button>
+</div>
+<?php endif; ?>
 
 </body>
 </html>

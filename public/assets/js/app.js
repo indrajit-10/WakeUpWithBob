@@ -14,6 +14,7 @@
  *   data-confirm="Are you sure?"            → submit is cancelled unless the user confirms
  *   data-share-copy="TEXT"                  → click copies TEXT to the clipboard
  *   data-sub-q="POST_ID" (subscribe button) → notes which post the popup was opened from
+ *   data-cookie-accept                      → hides the cookie notice for this browser session
  */
 (function () {
   'use strict';
@@ -244,5 +245,28 @@
       pop.classList.remove('open');
       lockPage(false);
     }
+  });
+
+  // --- cookie notice -------------------------------------------------------
+  // "Accept" or the X: hide the notice and remember it until the browser is closed.
+  // The cookie has no expiry date, so the browser deletes it on close and the notice
+  // asks again on the next visit. footer.php does not print the notice at all while
+  // this cookie is set.
+  function cookieNoticeAccepted() { return /(?:^|;\s*)cookie_notice=1(?:;|$)/.test(document.cookie); }
+
+  function hideCookieNotice() {
+    var note = document.querySelector('[data-cookie-note]');
+    if (note) { note.parentNode.removeChild(note); }
+  }
+
+  document.addEventListener('click', function (event) {
+    if (!event.target.closest('[data-cookie-accept]')) { return; }
+    document.cookie = 'cookie_notice=1; path=/; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');
+    hideCookieNotice();
+  });
+
+  // Back/Forward can show a page exactly as it was before the notice was accepted.
+  window.addEventListener('pageshow', function () {
+    if (cookieNoticeAccepted()) { hideCookieNotice(); }
   });
 })();

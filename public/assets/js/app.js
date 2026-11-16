@@ -259,14 +259,25 @@
     if (note) { note.parentNode.removeChild(note); }
   }
 
+  // Shown 1 second after the page appears (footer.php prints it hidden). This file
+  // is loaded with "defer", so it runs as soon as the page has been read.
+  window.setTimeout(function () {
+    var note = document.querySelector('[data-cookie-note]');
+    if (note && !cookieNoticeAccepted()) { note.classList.add('is-shown'); }
+  }, 1000);
+
   document.addEventListener('click', function (event) {
     if (!event.target.closest('[data-cookie-accept]')) { return; }
-    document.cookie = 'cookie_notice=1; path=/; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');
+    document.cookie = 'cookie_notice=1; path=/; SameSite=Lax';   // no secret in it, so no Secure flag: counts on http and https
     hideCookieNotice();
   });
 
-  // Back/Forward can show a page exactly as it was before the notice was accepted.
+  // Back/Forward can show a page exactly as it was before the notice was accepted,
+  // and another tab may have accepted it meanwhile: check again in both cases.
   window.addEventListener('pageshow', function () {
     if (cookieNoticeAccepted()) { hideCookieNotice(); }
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && cookieNoticeAccepted()) { hideCookieNotice(); }
   });
 })();

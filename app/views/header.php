@@ -5,16 +5,22 @@ $pageTitle = $pageTitle ?? SITE_NAME;
 $showChrome = $showSearch ?? true;        // public pages get search + nav; admin pages don't
 ?>
 <!doctype html>
-<html lang="en">
+<?php /* Light mode only, whatever the device is set to. data-theme="light" switches off
+         every dark rule in styles.css (they all skip [data-theme="light"]) even before any
+         script runs; "only light" also stops phone browsers' automatic dark mode. The dark
+         theme code is kept: to bring it back, remove data-theme here, the color-scheme meta,
+         and set FORCE_THEME to '' in assets/js/theme-init.js. */ ?>
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="only light">
   <title><?= e($pageTitle) ?></title>
   <link rel="icon" href="/assets/img/logo.svg">
-  <script src="/assets/js/theme-init.js" nonce="<?= e(csp_nonce()) ?>"></script>
   <?php /* ?v= changes whenever the file on the server changes, so every browser
            fetches the new copy straight after an upload instead of using an old cached one. */
         $__ver = static fn (string $f): string => (string) @filemtime(__DIR__ . '/../../public/assets/' . $f); ?>
+  <script src="/assets/js/theme-init.js?v=<?= e($__ver('js/theme-init.js')) ?>" nonce="<?= e(csp_nonce()) ?>"></script>
   <link rel="stylesheet" href="/assets/css/styles.css?v=<?= e($__ver('css/styles.css')) ?>">
   <script src="/assets/js/app.js?v=<?= e($__ver('js/app.js')) ?>" nonce="<?= e(csp_nonce()) ?>" defer></script>
   <?php /* Page-specific scripts (e.g. the admin editor). Local paths only — the
